@@ -1,0 +1,379 @@
+# Claude Code Context Guide for Bellbird
+
+This file documents key information about the Bellbird project to help Claude Code understand the codebase, architecture, and development context.
+
+## Project Overview
+
+**Bellbird** is a school calendar event aggregation and filtering tool that consolidates events from multiple sources (Compass, Class Dojo, HubHello, Xplore) and intelligently filters them based on relevance to specific children.
+
+**Problem**: Parents receive overwhelming communication from multiple school sources with no unified view.
+
+**Solution**: Single dashboard showing relevant calendar events for each child, powered by Claude API for intelligent filtering.
+
+## Tech Stack
+
+### Backend
+- **Language**: Python 3.10+
+- **Package Manager**: Poetry
+- **Web Framework**: Flask
+- **Database**: SQLite (local development)
+- **ORM**: SQLAlchemy 2.0
+- **Encryption**: cryptography (Fernet)
+- **LLM Integration**: Anthropic Claude API
+
+### Frontend
+- **HTML/JS/CSS** - Simple vanilla JS (Phase 1)
+- **Static assets** in `frontend/` directory
+
+### Development Tools
+- **Testing**: pytest + pytest-cov
+- **Formatting**: black
+- **Linting**: flake8
+- **Type Checking**: mypy
+
+## Project Structure & Key Directories
+
+```
+bellbird/
+├── src/                          # Main application code
+│   ├── adapters/                 # External API clients
+│   │   ├── compass.py           # Real Compass API (HTTP-based, no browser automation)
+│   │   └── compass_mock.py      # Synthetic data for testing
+│   ├── db/                       # Database layer
+│   │   ├── database.py          # SQLAlchemy session, connection, schema
+│   │   ├── models.py            # ORM models (Credential, UserConfig, RawEvent, FilteredEvent, SyncMetadata)
+│   │   └── credentials.py       # Encrypted credential storage/retrieval
+│   ├── models/                   # Pydantic/dataclass models
+│   │   └── config.py            # User configuration models
+│   ├── filtering/                # LLM-based event filtering
+│   │   └── llm_filter.py        # Claude API integration
+│   ├── api/                      # Flask REST API
+│   │   ├── routes.py            # Flask blueprint routes
+│   │   └── schemas.py           # Request/response validation
+│   ├── cli.py                    # [TODO] Command-line interface
+│   └── app.py                    # [TODO] Flask application factory
+├── frontend/                     # Web UI
+│   ├── index.html               # [TODO] Onboarding form
+│   ├── dashboard.html           # [TODO] Event dashboard
+│   ├── css/style.css            # [TODO] Styling
+│   └── js/app.js                # [TODO] Client-side logic
+├── tests/                        # Unit & integration tests
+├── data/                         # Runtime data directory (gitignored)
+│   └── bellbird.db             # SQLite database created at runtime
+├── pyproject.toml               # Poetry configuration + tool settings
+├── .env.example                 # Environment variables template
+├── .gitignore                   # Python + project-specific ignores
+└── poetry.lock                  # Locked dependencies
+```
+
+## Architecture & Data Flow
+
+### Layered Architecture
+```
+CLI/Web UI
+    ↓
+Flask Routes / CLI Commands
+    ↓
+Filtering Layer (Claude API)
+    ↓
+Database Layer (SQLAlchemy)
+    ├─ Adapters (Compass, etc.)
+    └─ Encryption (Fernet)
+```
+
+### Event Flow
+1. **Fetch**: Compass API → Raw events cached in SQLite
+2. **Filter**: Raw events + child profile + rules → Claude API → Filtered results
+3. **Display**: Filtered events shown in CLI or Web UI
+
+### Database Schema
+- `credentials` - Encrypted login credentials (username, password_encrypted, source)
+- `user_config` - Child profile and preferences (child_name, school, year_level, class, interests, filter_rules)
+- `raw_events_cache` - Unmodified Compass API responses (stored as JSON blobs)
+- `filtered_events` - Claude-filtered results with reasoning (event_id, is_relevant, reason, action_needed)
+- `sync_metadata` - Sync status and timestamps (last_sync_time, sync_status, error_message)
+
+## Key Design Decisions
+
+1. **No Browser Automation**
+   - Uses direct HTTP requests to Compass API (not Puppeteer/JS library)
+   - Faster startup, lower memory, simpler to debug
+   - See COMPASS_PYTHON_CLIENT_PLAN.md for implementation details
+
+2. **Local-First MVP**
+   - SQLite database for development (no cloud setup needed)
+   - Credentials encrypted locally with Fernet
+   - Data stored in `data/` directory (git-ignored)
+
+3. **LLM-Powered Filtering**
+   - Claude API handles fuzzy matching and natural language interpretation
+   - Filters based on free-text rules + child profile
+   - Results cached to avoid repeated API calls
+
+4. **Mock Data for Development**
+   - `CompassMockClient` provides realistic synthetic events
+   - Allows testing without real credentials during development
+   - Same interface as real adapter (easy to swap)
+
+5. **Dual Interface (CLI + Web)**
+   - CLI for testing and batch operations
+   - Flask web app for user-facing UI
+   - Both use same database and filtering logic
+
+## Environment & Configuration
+
+### Required Environment Variables
+```bash
+CLAUDE_API_KEY                  # Anthropic API key (required)
+BELLBIRD_ENCRYPTION_KEY         # Fernet encryption key (auto-generated on first run)
+FLASK_ENV=development           # Optional, defaults to production
+FLASK_DEBUG=1                   # Optional, for development
+DATABASE_URL=sqlite:///./data/bellbird.db  # Optional, defaults as shown
+```
+
+See `.env.example` for full template.
+
+### Poetry Commands
+```bash
+poetry install --with dev       # Install all dependencies
+poetry run pytest               # Run tests
+poetry run black src tests      # Format code
+poetry run flake8 src tests     # Lint
+poetry run mypy src             # Type check
+poetry add package-name         # Add production dependency
+poetry add --group dev pkg      # Add dev dependency
+poetry run bellbird --help      # CLI help (when implemented)
+poetry run flask run            # Flask development server (when implemented)
+```
+
+## Phase 1 MVP Roadmap (10 Days)
+
+### Days 1-2: Database Foundation
+- [ ] Implement `src/db/database.py` (SQLAlchemy session, schema creation)
+- [ ] Implement `src/db/models.py` (Credential, UserConfig, RawEvent, FilteredEvent, SyncMetadata)
+- [ ] Implement `src/db/credentials.py` (encrypted credential storage)
+
+### Days 2-3: Testing Framework (Parallel)
+- [ ] Implement `src/adapters/compass_mock.py` (15-20 synthetic events)
+- [ ] Add unit tests for mock adapter
+
+### Days 3-5: Filtering & Real Integration
+- [ ] Implement `src/filtering/llm_filter.py` (Claude API integration)
+- [ ] Implement `src/adapters/compass.py` (real Compass API client)
+- [ ] Test with real credentials
+
+### Days 5-7: Web & CLI
+- [ ] Implement `src/cli.py` (argument parser, commands: --fetch, --filter, --full, --show-filtered)
+- [ ] Implement `src/app.py` (Flask app factory)
+- [ ] Implement `src/api/routes.py` (REST endpoints: /config, /sync, /events, /sync-status)
+- [ ] Implement `src/api/schemas.py` (request/response validation)
+
+### Days 7-9: User Interface
+- [ ] Implement `frontend/index.html` (onboarding form)
+- [ ] Implement `frontend/dashboard.html` (event display)
+- [ ] Implement `frontend/css/style.css` (basic styling)
+- [ ] Implement `frontend/js/app.js` (form submission, API calls)
+
+### Days 9-10: Integration & Polish
+- [ ] End-to-end testing
+- [ ] Error handling and edge cases
+- [ ] Documentation
+- [ ] Performance testing
+- [ ] Final testing with real data
+
+## Compass API Integration
+
+**Approach**: Direct HTTP requests to Compass API (no browser automation)
+
+**Authentication**:
+1. POST credentials to `/login.aspx`
+2. Capture cookies and session metadata
+3. Reuse cookies for API calls via `requests.Session()`
+
+**API Endpoint**: `POST /Services/Calendar.svc/GetCalendarEventsByUser`
+
+**Payload Structure**:
+```python
+{
+    'userId': int,
+    'homePage': bool,
+    'activityId': None,
+    'locationId': None,
+    'staffIds': None,
+    'startDate': 'YYYY-MM-DD',
+    'endDate': 'YYYY-MM-DD',
+    'page': 1,
+    'start': 0,
+    'limit': 100
+}
+```
+
+See `COMPASS_PYTHON_CLIENT_PLAN.md` for full implementation details.
+
+## Claude API Integration
+
+**Model**: claude-opus-4-1-20250805 (or latest)
+
+**Usage**: Filtering calendar events based on user config
+
+**Prompt Structure**:
+- Child profile (name, school, year level, class, interests)
+- Filter rules (free text)
+- Raw calendar events (JSON array)
+- Task: Determine relevance and reasoning for each event
+
+**Output Format**: JSON array with fields: event_id, title, date, is_relevant, reason, action_needed
+
+See `src/filtering/llm_filter.py` implementation for details.
+
+## Documentation Files
+
+| File | Purpose | Read First? |
+|------|---------|-------------|
+| QUICK_START.md | 2-minute setup guide | ✅ Yes |
+| INDEX.md | Navigation guide & roadmap | ✅ Yes |
+| SETUP_SUMMARY.md | Detailed initialization info | After QUICK_START |
+| README.md | Full project documentation | For reference |
+| PLAN.md | Project vision & requirements | For context |
+| MVP_ARCHITECTURE.md | System design & data flow | Before coding |
+| COMPASS_PYTHON_CLIENT_PLAN.md | Compass API integration | For adapter work |
+| CLAUDE.md | This file | For Claude context |
+
+## Common Patterns & Conventions
+
+### Database Access
+```python
+from src.db.database import get_session
+from src.db.models import UserConfig
+
+with get_session() as session:
+    config = session.query(UserConfig).first()
+```
+
+### Encryption
+```python
+from src.db.credentials import CredentialManager
+
+cred_manager = CredentialManager(session)
+cred_manager.save_compass_credentials(username, password)
+username, password = cred_manager.load_compass_credentials()
+```
+
+### LLM Filtering
+```python
+from src.filtering.llm_filter import LLMFilter
+
+filter_engine = LLMFilter(api_key)
+results = filter_engine.filter_events(raw_events, user_config)
+```
+
+### CLI Commands
+```bash
+poetry run bellbird --set-credentials compass --username X --password Y
+poetry run bellbird --set-config --child-name Sophia --year-level "Year 3" ...
+poetry run bellbird --fetch
+poetry run bellbird --filter
+poetry run bellbird --full
+poetry run bellbird --show-filtered
+```
+
+## Testing Strategy
+
+### Unit Tests
+- Test each adapter (mock and real Compass)
+- Test filtering logic with mock data
+- Test database operations (CRUD)
+- Test credential encryption/decryption
+
+### Integration Tests
+- Test full pipeline: fetch → normalize → filter → display
+- Test CLI with mock data
+- Test Flask endpoints
+
+### Test Data
+- Use `CompassMockClient` for development
+- Real Compass credentials for integration testing
+- Synthetic user configs for filtering tests
+
+## Git Workflow
+
+### Repository Status
+- **Current Branch**: main
+- **Status**: Initial project structure, ready for implementation
+- **Gitignore**: Properly configured for Python + project-specific files
+
+### Files to Never Commit
+- `.env` (has API keys)
+- `.venv/` (virtual environment)
+- `data/bellbird.db` (user data)
+- `__pycache__/` and `.pytest_cache/`
+
+### Commit Message Style
+- Clear, imperative ("Add database models" not "Added")
+- Reference the component ("db:" or "api:" prefix)
+- Example: "db: add encrypted credential storage"
+
+## Debugging & Troubleshooting
+
+### Poetry Issues
+```bash
+poetry lock --refresh
+poetry install --with dev
+poetry cache clear . --all
+```
+
+### Database Issues
+```bash
+rm data/bellbird.db  # Reset database
+poetry run pytest    # Verify tests pass
+```
+
+### Type Checking
+```bash
+poetry run mypy src  # Full type check
+```
+
+### Code Quality
+```bash
+poetry run black src tests       # Auto-format
+poetry run flake8 src tests      # Check style
+poetry run mypy src              # Check types
+```
+
+## Important Notes for Future Sessions
+
+1. **MVP Timeline**: 10 days of focused development to working tool
+2. **Priority**: Get something usable early (Days 1-6), polish later (Days 7-10)
+3. **Testing**: Use mock data extensively during development
+4. **Encryption**: Credentials stored encrypted in SQLite, key in .env
+5. **API Key**: CLAUDE_API_KEY required in .env to run filtering
+6. **Database**: SQLite for MVP, can migrate to Firestore/Cloud SQL in Phase 2
+7. **Authentication**: Compass uses simple form-based auth (not OAuth)
+8. **Compass API**: Returns events with various properties, normalize on access
+9. **Mock Data**: Realistic synthetic events for testing, swap with real adapter easily
+10. **Error Handling**: Gracefully handle API failures, missing credentials, malformed data
+
+## Phase 2 Considerations
+
+When expanding beyond Compass:
+- Implement normalization layer for multi-source events
+- Create adapter interface for Class Dojo, HubHello, Xplore
+- Enhance filtering to handle cross-source event deduplication
+- Advanced UI with tagging, date range filtering
+- Consider Firestore/Cloud SQL for scalability
+- Implement Google Calendar sync
+
+## References & Resources
+
+- [Anthropic Claude API Docs](https://docs.anthropic.com)
+- [SQLAlchemy ORM Docs](https://docs.sqlalchemy.org)
+- [Flask Documentation](https://flask.palletsprojects.com)
+- [Poetry Documentation](https://python-poetry.org/docs)
+- [cryptography.io - Fernet](https://cryptography.io/en/latest/fernet/)
+
+---
+
+**Last Updated**: November 22, 2025
+**Created For**: Claude Code future sessions
+**Project Status**: Ready for Phase 1 MVP implementation
+**Next Priority**: Implement database layer (src/db/)
