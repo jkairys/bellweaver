@@ -190,6 +190,41 @@ The current implementation uses `requests.Session()` which:
 
 ## Testing
 
+### Using Test Fixtures
+
+For unit tests that need sample Compass data without making API calls:
+
+```python
+from tests.fixtures import load_compass_sample_events
+
+# Load sanitized sample events (safe for version control)
+sample_events = load_compass_sample_events()
+
+# Use in tests
+assert len(sample_events) == 5
+assert sample_events[0]['longTitle'] == "10:00: Year 1 Generalist"
+```
+
+### Collecting Fresh Mock Data
+
+To collect new mock data from a live Compass instance (requires credentials):
+
+```bash
+# Collect real events and save to data/mock/ (git-ignored)
+poetry run python scripts/collect_mock_data.py
+```
+
+This script:
+1. Authenticates with Compass using `.env` credentials
+2. Fetches calendar events for the next 30 days
+3. Saves raw response to `data/mock/compass_events_raw.json`
+4. Saves sanitized version to `data/mock/compass_events_sanitized.json`
+5. Creates metadata file with collection details
+
+**Note**: Files in `data/mock/` are git-ignored. Only curated fixtures in `tests/fixtures/` should be committed.
+
+### Running Tests
+
 ```bash
 # Test with mock data (no credentials needed)
 poetry run pytest tests/test_compass_client_mock.py -v
