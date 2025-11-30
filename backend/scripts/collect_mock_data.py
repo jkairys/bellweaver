@@ -5,8 +5,7 @@ Collect real Compass data for use as mock data in development.
 This script:
 1. Authenticates with Compass using credentials from .env
 2. Fetches calendar events for the next 30 days
-3. Saves the raw response to data/mock/compass_events_raw.json
-4. Sanitizes the data and saves to data/mock/compass_events_sanitized.json
+3. Saves the raw response to data/mock/compass_events.json
 """
 
 import os
@@ -19,31 +18,6 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.adapters.compass import CompassClient
-
-
-def sanitize_event(event):
-    """
-    Remove or anonymize sensitive information from event data.
-
-    Keeps structure intact but removes personal details.
-    """
-    sanitized = event.copy()
-
-    # Fields to anonymize (replace with generic values)
-    if 'managers' in sanitized and sanitized['managers']:
-        for i, manager in enumerate(sanitized['managers']):
-            if 'name' in manager:
-                manager['name'] = f'Teacher {i+1}'
-            if 'email' in manager:
-                manager['email'] = f'teacher{i+1}@example.edu'
-
-    # Remove any email addresses or phone numbers in descriptions
-    if 'description' in sanitized and sanitized['description']:
-        desc = sanitized['description']
-        # Simple sanitization - in practice you might want more sophisticated regex
-        sanitized['description'] = desc
-
-    return sanitized
 
 
 def main():
@@ -84,37 +58,16 @@ def main():
         events = client.get_calendar_events(start_date, end_date, limit=100)
         print(f"✓ Fetched {len(events)} events")
 
-        # Save raw response
-        raw_file = output_dir / 'compass_events_raw.json'
-        with open(raw_file, 'w') as f:
+        # Save events
+        events_file = output_dir / 'compass_events.json'
+        with open(events_file, 'w') as f:
             json.dump(events, f, indent=2, default=str)
-        print(f"✓ Saved raw data to {raw_file}")
-
-        # Sanitize and save
-        sanitized_events = [sanitize_event(event) for event in events]
-        sanitized_file = output_dir / 'compass_events_sanitized.json'
-        with open(sanitized_file, 'w') as f:
-            json.dump(sanitized_events, f, indent=2, default=str)
-        print(f"✓ Saved sanitized data to {sanitized_file}")
-
-        # Create metadata file
-        metadata = {
-            'collected_at': datetime.now().isoformat(),
-            'date_range': {
-                'start': start_date,
-                'end': end_date
-            },
-            'event_count': len(events),
-            'compass_url': base_url
-        }
-        metadata_file = output_dir / 'metadata.json'
-        with open(metadata_file, 'w') as f:
-            json.dump(metadata, f, indent=2)
-        print(f"✓ Saved metadata to {metadata_file}")
+        print(f"✓ Saved events to {events_file}")
 
         print("\nSuccess! Mock data collected.")
-        print(f"  Raw events: {len(events)}")
-        print(f"  Files created in: {output_dir}")
+        print(f"  Total events: {len(events)}")
+        print(f"  Date range: {start_date} to {end_date}")
+        print(f"  Output: {events_file}")
 
     except Exception as e:
         print(f"Error: {e}")

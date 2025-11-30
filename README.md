@@ -12,6 +12,7 @@ A unified school calendar event aggregation and filtering tool that consolidates
 ## Project Vision
 
 Parents receive overwhelming amounts of communication from multiple school sources. Bellweaver solves this by:
+
 - **Consolidating** events from multiple calendar systems into one place
 - **Filtering** for relevant events based on child/year level/event type
 - **Providing** advance notifications and a clear "next 2 weeks" view
@@ -27,6 +28,7 @@ Parents receive overwhelming amounts of communication from multiple school sourc
 ## MVP Scope (Phase 1)
 
 The MVP focuses on **Compass only** for local development:
+
 - Fetch calendar events from Compass
 - Filter events intelligently using Claude API
 - Provide both CLI and Web UI interfaces
@@ -95,6 +97,7 @@ bellweaver/
 ## Setup Instructions
 
 ### Prerequisites
+
 - Python 3.9+
 - Poetry (for dependency management)
 - Compass account credentials (for real API testing)
@@ -103,29 +106,34 @@ bellweaver/
 ### Installation
 
 1. **Clone the repository**:
+
 ```bash
 git clone <repo-url>
 cd bellweaver
 ```
 
 2. **Set up the backend**:
+
 ```bash
 cd backend
 poetry install --with dev
 ```
 
 3. **Set up environment variables**:
+
 ```bash
 cp .env.example .env
 ```
 
 Then edit `.env` with your actual values:
+
 ```bash
 CLAUDE_API_KEY=your-anthropic-api-key-here
 BELLWEAVER_ENCRYPTION_KEY=  # Will be auto-generated on first run
 ```
 
 4. **Verify installation**:
+
 ```bash
 poetry run pytest
 ```
@@ -135,11 +143,13 @@ poetry run pytest
 ### CLI Mode
 
 **Full end-to-end sync** (fetch + filter):
+
 ```bash
 poetry run bellbird --full
 ```
 
 **Individual steps**:
+
 ```bash
 # Just fetch from Compass (or mock)
 poetry run bellbird --fetch
@@ -152,6 +162,7 @@ poetry run bellbird --show-filtered
 ```
 
 **Configuration**:
+
 ```bash
 # Set Compass credentials (encrypted in SQLite)
 poetry run bellbird --set-credentials compass --username your@email.com --password yourpassword
@@ -169,13 +180,15 @@ poetry run bellbird --set-config \
 ### Web UI
 
 **Start the Flask server**:
+
 ```bash
 poetry run flask run
 ```
 
-Then open http://localhost:5000 in your browser.
+Then open <http://localhost:5000> in your browser.
 
 Features:
+
 - Onboarding form for credentials and child profile
 - Dashboard showing next 2 weeks of relevant events
 - Sync button to fetch & filter new events
@@ -186,12 +199,14 @@ Features:
 All development commands should be run from the `backend/` directory:
 
 ### Running Tests
+
 ```bash
 cd backend
 poetry run pytest
 ```
 
 ### Code Quality
+
 ```bash
 cd backend
 poetry run black src tests
@@ -200,6 +215,7 @@ poetry run mypy src
 ```
 
 ### Development Mode
+
 ```bash
 cd backend
 export FLASK_ENV=development
@@ -221,11 +237,13 @@ poetry run flask run --debug
 ## Architecture Highlights
 
 ### Data Flow
+
 1. **Fetch**: Compass API → Raw events cached in SQLite
 2. **Filter**: Raw events + child profile + rules → Claude API → Filtered results
 3. **Display**: Filtered events shown in CLI or Web UI
 
 ### Database Schema
+
 - `credentials`: Encrypted Compass login credentials
 - `user_config`: Child profile and filter rules
 - `raw_events_cache`: Unmodified Compass API responses
@@ -235,6 +253,7 @@ poetry run flask run --debug
 ## Next Steps
 
 ### Phase 1 (MVP - Days 1-10)
+
 - [x] Project scaffold with Poetry
 - [ ] Database layer with encryption
 - [ ] Mock Compass adapter
@@ -246,6 +265,7 @@ poetry run flask run --debug
 - [ ] Documentation
 
 ### Phase 2 (Multi-Source)
+
 - [ ] Add normalization layer
 - [ ] Integrate Class Dojo
 - [ ] Integrate HubHello
@@ -255,6 +275,7 @@ poetry run flask run --debug
 ## Troubleshooting
 
 ### Poetry Issues
+
 ```bash
 # Update lock file
 poetry lock --refresh
@@ -264,6 +285,7 @@ poetry cache clear . --all
 ```
 
 ### Database Reset
+
 ```bash
 rm data/bellweaver.db
 ```
@@ -275,3 +297,9 @@ This is a personal project, but feel free to fork and adapt!
 ## License
 
 TBD
+
+## References
+
+Keeping these for later if required:
+
+- <https://github.com/VeNoMouS/cloudscraper>
