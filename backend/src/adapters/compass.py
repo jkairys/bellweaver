@@ -193,22 +193,24 @@ class CompassClient:
             target_user_id: User ID to fetch details for (defaults to current user)
 
         Returns:
-            Dictionary containing user details with fields:
-                - verboseAge: Expanded string describing user's age
-                - birthday: User's date of birth (e.g., "10 Jan 1940")
+            Dictionary containing user details with fields including:
+                - userId: Compass user ID
+                - userFirstName: User's first name
+                - userLastName: User's last name
+                - userPreferredName: User's preferred name
+                - userFullName: Full name
+                - userEmail: User's email address
+                - userDisplayCode: Unique identifier within the school (e.g., "ABC-0000")
+                - userYearLevel: User's year level (e.g., 8)
+                - userFormGroup: User's form group
+                - userHouse: User's house
+                - userPhotoPath: Path to user's photo
+                - birthday: User's date of birth
                 - gender: User's gender
-                - compassID: Compass ID of the user
-                - displayCode: Unique identifier within the school (e.g., "ABC-0000")
-                - email: User's email address
-                - firstName: User's first name
-                - formGroup: User's form group
-                - fullName: Full name including preferred name
-                - lastName: User's last name
-                - house: User's house
-                - photoURL: URL to user's photo
-                - preferredName: User's preferred name
-                - preferredLastName: User's preferred last name
-                - yearLevel: User's year level (e.g., 8)
+                - age: User's age
+                - userRole: User's role (e.g., 3 for parent)
+                - userCompassPersonId: Compass person UUID
+                - and many other fields...
         """
         if not self._authenticated:
             raise Exception("Not authenticated. Call login() first.")

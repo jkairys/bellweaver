@@ -132,20 +132,23 @@ class TestCompassClientRealUserDetails:
 
         # Common expected fields (though they may be null)
         expected_fields = [
-            "firstName",
-            "lastName",
-            "email",
-            "fullName",
-            "preferredName",
-            "yearLevel",
-            "displayCode",
-            "compassID",
+            "userId",
+            "userFirstName",
+            "userLastName",
+            "userEmail",
+            "userFullName",
+            "userPreferredName",
+            "userYearLevel",
+            "userDisplayCode",
+            "userCompassPersonId",
         ]
 
         # Check if expected fields exist in the response
         if user_details:
             present_fields = [field for field in expected_fields if field in user_details]
             print(f"\nExpected fields present: {present_fields}")
+            # All core fields should be present in the response
+            assert all(field in user_details for field in expected_fields)
 
     def test_fetch_user_details_without_login_fails(self):
         """Test that fetching user details without login raises error."""
