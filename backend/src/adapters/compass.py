@@ -185,6 +185,70 @@ class CompassClient:
         if self.user_id is None:
             raise Exception("Failed to extract userId from Compass session")
 
+    def get_user_details(self, target_user_id: Optional[int] = None) -> Dict[str, Any]:
+        """
+        Fetch detailed user information from Compass.
+
+        Args:
+            target_user_id: User ID to fetch details for (defaults to current user)
+
+        Returns:
+            Dictionary containing user details with fields:
+                - verboseAge: Expanded string describing user's age
+                - birthday: User's date of birth (e.g., "10 Jan 1940")
+                - gender: User's gender
+                - compassID: Compass ID of the user
+                - displayCode: Unique identifier within the school (e.g., "ABC-0000")
+                - email: User's email address
+                - firstName: User's first name
+                - formGroup: User's form group
+                - fullName: Full name including preferred name
+                - lastName: User's last name
+                - house: User's house
+                - photoURL: URL to user's photo
+                - preferredName: User's preferred name
+                - preferredLastName: User's preferred last name
+                - yearLevel: User's year level (e.g., 8)
+        """
+        if not self._authenticated:
+            raise Exception("Not authenticated. Call login() first.")
+
+        # Ensure we have the userId
+        self._ensure_session_metadata()
+
+        # Use provided user ID or fall back to current user
+        user_id = target_user_id if target_user_id is not None else self.user_id
+
+        # Build the API request
+        api_url = f"{self.base_url}/Services/User.svc/GetUserDetailsBlobByUserId"
+
+        payload = {"targetUserId": user_id}
+
+        try:
+            response = self.session.post(
+                api_url,
+                json=payload,
+                headers={"Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest"},
+                timeout=10,
+            )
+            response.raise_for_status()
+
+            # Parse response - Compass wraps result in .d property
+            data = response.json()
+
+            # Extract actual user details from response
+            if isinstance(data, dict) and "d" in data:
+                user_details = data["d"]
+            else:
+                user_details = data
+
+            return user_details if isinstance(user_details, dict) else {}
+
+        except requests.RequestException as e:
+            raise Exception(f"Failed to fetch user details: {e}")
+        except json.JSONDecodeError as e:
+            raise Exception(f"Invalid JSON response from Compass: {e}")
+
     def get_calendar_events(
         self, start_date: str, end_date: str, limit: int = 100  # YYYY-MM-DD  # YYYY-MM-DD
     ) -> List[Dict[str, Any]]:

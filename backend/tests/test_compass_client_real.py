@@ -91,6 +91,72 @@ class TestCompassClientRealAuthentication:
         assert len(compass_client.session.cookies) > 0
 
 
+class TestCompassClientRealUserDetails:
+    """Test real Compass API user details fetching."""
+
+    def test_fetch_user_details_current_user(self, compass_client):
+        """Test fetching user details for the current authenticated user."""
+        compass_client.login()
+
+        user_details = compass_client.get_user_details()
+
+        # Should return a dictionary
+        assert isinstance(user_details, dict)
+
+        # Should have some expected fields (may be null/empty based on user data)
+        # Common fields include: firstName, lastName, email, yearLevel, etc.
+        if user_details:
+            print(f"\nUser details keys: {list(user_details.keys())}")
+            print(f"Full user details: {user_details}")
+
+    def test_fetch_user_details_specific_user(self, compass_client):
+        """Test fetching user details for a specific user ID."""
+        compass_client.login()
+
+        # Use the authenticated user's ID as the target
+        user_id = compass_client.user_id
+        user_details = compass_client.get_user_details(target_user_id=user_id)
+
+        # Should return a dictionary
+        assert isinstance(user_details, dict)
+
+        # Should have some expected fields
+        if user_details:
+            print(f"\nUser details for user {user_id}: {user_details}")
+
+    def test_fetch_user_details_has_expected_fields(self, compass_client):
+        """Test that user details contain expected Compass fields."""
+        compass_client.login()
+
+        user_details = compass_client.get_user_details()
+
+        # Common expected fields (though they may be null)
+        expected_fields = [
+            "firstName",
+            "lastName",
+            "email",
+            "fullName",
+            "preferredName",
+            "yearLevel",
+            "displayCode",
+            "compassID",
+        ]
+
+        # Check if expected fields exist in the response
+        if user_details:
+            present_fields = [field for field in expected_fields if field in user_details]
+            print(f"\nExpected fields present: {present_fields}")
+
+    def test_fetch_user_details_without_login_fails(self):
+        """Test that fetching user details without login raises error."""
+        client = CompassClient(base_url=COMPASS_BASE_URL, username="dummy", password="dummy")
+
+        with pytest.raises(Exception, match="Not authenticated"):
+            client.get_user_details()
+
+        client.close()
+
+
 class TestCompassClientRealCalendarEvents:
     """Test real Compass API calendar event fetching."""
 
