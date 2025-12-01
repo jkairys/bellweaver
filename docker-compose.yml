@@ -1,0 +1,28 @@
+services:
+  bellweaver:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bellweaver
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_DEBUG=true
+      - DATABASE_PATH=/app/data/bellweaver.db
+    volumes:
+      # Persist database outside container
+      - ./backend/data:/app/data
+    restart: unless-stopped
+    env_file: .env.docker
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import requests; requests.get('http://localhost:5000/api/user', timeout=5)",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s

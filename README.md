@@ -7,6 +7,7 @@ A unified school calendar event aggregation and filtering tool that consolidates
 - **[Documentation Index](docs/index.md)** - Complete documentation and current status
 - **[Quick Start](docs/quick-start.md)** - Get started in 5 minutes
 - **[Architecture](docs/architecture.md)** - System design and technical decisions
+- **[Docker Deployment](docs/docker-deployment.md)** - Deploy with Docker (frontend + backend in one container)
 
 ## Project Vision
 
@@ -95,16 +96,38 @@ bellweaver/
 └── README.md                    # This file
 ```
 
-## Setup Instructions
+## Deployment Options
 
-### Prerequisites
+### Option 1: Docker (Recommended for Production)
 
-- Python 3.9+
+See **[Docker Deployment Guide](docs/docker-deployment.md)** for complete instructions.
+
+Quick start:
+
+```bash
+# Copy environment template
+cp .env.docker.example .env
+
+# Edit .env with your Compass credentials
+# Then start with Docker Compose
+docker-compose up -d
+
+# Sync data from Compass
+docker exec -it bellweaver bellweaver compass sync
+
+# Access at http://localhost:5000
+```
+
+### Option 2: Local Development
+
+#### Prerequisites
+
+- Python 3.10+
+- Node.js 20+
 - Poetry (for dependency management)
-- Compass account credentials (for real API testing)
-- Claude API key (from Anthropic)
+- Compass account credentials
 
-### Installation
+#### Installation
 
 1. **Clone the repository**:
 
@@ -120,24 +143,51 @@ cd backend
 poetry install --with dev
 ```
 
-3. **Set up environment variables**:
+3. **Set up the frontend**:
 
 ```bash
+cd ../frontend
+npm install
+```
+
+4. **Set up environment variables**:
+
+```bash
+cd ../backend
 cp .env.example .env
 ```
 
 Then edit `.env` with your actual values:
 
 ```bash
-CLAUDE_API_KEY=your-anthropic-api-key-here
-BELLWEAVER_ENCRYPTION_KEY=  # Will be auto-generated on first run
+COMPASS_USERNAME=your_compass_username
+COMPASS_PASSWORD=your_compass_password
+COMPASS_BASE_URL=https://your-school.compass.education
 ```
 
-4. **Verify installation**:
+5. **Verify installation**:
 
 ```bash
 poetry run pytest
 ```
+
+#### Running in Development Mode
+
+Run frontend and backend separately with hot reload:
+
+```bash
+# Terminal 1: Start backend API
+cd backend
+poetry run bellweaver api serve --debug
+
+# Terminal 2: Start frontend dev server
+cd frontend
+npm run dev
+```
+
+Access:
+- Frontend: http://localhost:3000 (with hot reload)
+- Backend API: http://localhost:5000/api/*
 
 ## Usage
 

@@ -14,10 +14,10 @@ from bellweaver.models.compass import CompassUser, CompassEvent
 from bellweaver.parsers.compass import CompassParser
 
 # Create blueprint for user-related routes
-user_bp = Blueprint("users", __name__, url_prefix="/user")
+user_bp = Blueprint("users", __name__, url_prefix="/api/user")
 
 # Create blueprint for events-related routes
-events_bp = Blueprint("events", __name__, url_prefix="/events")
+events_bp = Blueprint("events", __name__, url_prefix="/api/events")
 
 
 @user_bp.route("", methods=["GET"])
