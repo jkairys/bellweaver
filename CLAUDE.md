@@ -204,9 +204,10 @@ For detailed information, see:
    - `main.py`: Main CLI application entry point
    - `commands/mock.py`: Mock data management commands
    - `commands/compass.py`: Compass sync commands
-     - **sync**: Syncs calendar events from Compass to database
-       - Creates Batch records to track sync operations
-       - Fetches events for current calendar year or custom date range
+     - **sync**: Syncs user details and calendar events from Compass to database
+       - Creates separate Batch records to track each sync operation
+       - Fetches user details for the authenticated user
+       - Fetches calendar events for current calendar year or custom date range
        - Stores raw API responses in ApiPayload table
        - Usage: `poetry run bellweaver compass sync [--days N] [--limit N]`
    - All 75 tests passing

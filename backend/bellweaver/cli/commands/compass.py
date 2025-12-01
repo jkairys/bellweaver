@@ -35,19 +35,20 @@ def sync_calendar_events(
     ),
 ):
     """
-    Sync calendar events from Compass to the local database.
+    Sync calendar events and user details from Compass to the local database.
 
     This command:
-    1. Creates a Batch record to track this sync operation
+    1. Creates Batch records to track sync operations
     2. Authenticates with Compass using credentials from environment variables
-    3. Fetches calendar events for the current calendar year (or specified days)
-    4. Stores raw API responses in the ApiPayload table
-    5. Links all payloads to the Batch record
+    3. Fetches user details for the authenticated user
+    4. Fetches calendar events for the current calendar year (or specified days)
+    5. Stores raw API responses in the ApiPayload table
+    6. Links all payloads to their respective Batch records
 
     Requires COMPASS_BASE_URL, COMPASS_USERNAME, and COMPASS_PASSWORD
     to be set in your .env file or environment variables.
     """
-    typer.echo("Syncing calendar events from Compass...")
+    typer.echo("Syncing data from Compass...")
     typer.echo("")
 
     # Validate environment variables
@@ -101,9 +102,50 @@ def sync_calendar_events(
         db = SessionLocal()
 
         try:
-            # Create Batch record
-            typer.echo("  Creating batch record...")
-            batch = Batch(
+            # Authenticate with Compass
+            typer.echo("  Authenticating with Compass...")
+            client = CompassClient(base_url, username, password)
+            client.login()
+            typer.secho("  ✓ Authenticated", fg=typer.colors.GREEN)
+            typer.echo("")
+
+            # --- Fetch User Details ---
+            typer.echo("  Fetching user details...")
+
+            # Create batch for user details
+            user_batch = Batch(
+                adapter_id="compass",
+                method_name="get_user_details",
+                parameters={},
+            )
+            db.add(user_batch)
+            db.commit()
+            db.refresh(user_batch)
+
+            # Fetch user details
+            user_details = client.get_user_details()
+
+            typer.secho("  ✓ Fetched user details", fg=typer.colors.GREEN)
+
+            # Store user details as API payload
+            user_payload = ApiPayload(
+                adapter_id="compass",
+                method_name="get_user_details",
+                batch_id=user_batch.id,
+                payload=user_details,
+            )
+            db.add(user_payload)
+            db.commit()
+
+            typer.secho("  ✓ Stored user details", fg=typer.colors.GREEN)
+            typer.echo(f"  User Batch ID: {user_batch.id}")
+            typer.echo("")
+
+            # --- Fetch Calendar Events ---
+            typer.echo("  Fetching calendar events...")
+
+            # Create batch for calendar events
+            events_batch = Batch(
                 adapter_id="compass",
                 method_name="get_calendar_events",
                 parameters={
@@ -112,21 +154,11 @@ def sync_calendar_events(
                     "limit": limit,
                 },
             )
-            db.add(batch)
+            db.add(events_batch)
             db.commit()
-            db.refresh(batch)
-
-            typer.echo(f"  Batch ID: {batch.id}")
-            typer.echo("")
-
-            # Authenticate with Compass
-            typer.echo("  Authenticating with Compass...")
-            client = CompassClient(base_url, username, password)
-            client.login()
-            typer.secho("  ✓ Authenticated", fg=typer.colors.GREEN)
+            db.refresh(events_batch)
 
             # Fetch calendar events
-            typer.echo("  Fetching calendar events...")
             events = client.get_calendar_events(
                 start_date=start_date_str,
                 end_date=end_date_str,
@@ -134,35 +166,34 @@ def sync_calendar_events(
             )
 
             typer.secho(f"  ✓ Fetched {len(events)} events", fg=typer.colors.GREEN)
-            typer.echo("")
 
             # Store events as API payloads
-            typer.echo("  Storing events in database...")
             for event in events:
                 payload = ApiPayload(
                     adapter_id="compass",
                     method_name="get_calendar_events",
-                    batch_id=batch.id,
+                    batch_id=events_batch.id,
                     payload=event,
                 )
                 db.add(payload)
 
             db.commit()
             typer.secho(f"  ✓ Stored {len(events)} events", fg=typer.colors.GREEN)
+            typer.echo(f"  Events Batch ID: {events_batch.id}")
 
             # Close client connection
             client.close()
 
             # Display success summary
             typer.echo("")
-            typer.secho("✓ Success! Calendar events synced.", fg=typer.colors.GREEN, bold=True)
+            typer.secho("✓ Success! Data synced from Compass.", fg=typer.colors.GREEN, bold=True)
             typer.echo("")
             typer.echo("Summary:")
-            typer.echo(f"  Batch ID: {batch.id}")
-            typer.echo(f"  Events stored: {len(events)}")
+            typer.echo(f"  User details stored: 1")
+            typer.echo(f"  User batch ID: {user_batch.id}")
+            typer.echo(f"  Calendar events stored: {len(events)}")
+            typer.echo(f"  Events batch ID: {events_batch.id}")
             typer.echo(f"  Date range: {start_date_str} to {end_date_str}")
-            typer.echo(f"  Adapter: compass")
-            typer.echo(f"  Method: get_calendar_events")
 
         finally:
             db.close()
