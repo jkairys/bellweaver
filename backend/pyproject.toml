@@ -25,7 +25,7 @@ flake8 = "^6.0.0"
 mypy = "^1.0.0"
 
 [tool.poetry.scripts]
-bellweaver = "src.cli:main"
+bellweaver = "bellweaver.cli.main:app"
 
 [build-system]
 requires = ["poetry-core"]
