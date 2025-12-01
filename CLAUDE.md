@@ -26,6 +26,14 @@ This file documents key information about the Bellweaver project to help Claude 
   - push the branch to the remote
   - create a pull request using the `gh` cli and let me review and merge it
 
+## When waiting for input, or the task is complete
+
+Use the command line below to notify the user every signle time Claude Code execution finishes, whether it's waiting for input or a task is complete.
+
+```zsh
+osascript -e 'display notification "Waiting for your input" with title "Claude Code" sound name "Glass"'
+```
+
 ## Tech Stack
 
 ### Backend
@@ -47,13 +55,16 @@ bellweaver/
 ├── backend/                      # Backend Python application
 │   ├── bellweaver/                      # Main application code
 │   │   ├── adapters/            # External API clients
-│   │   │   ├── compass.py       # Real Compass API (HTTP-based, no browser automation)
+│   │   │   ├── compass.py       # Real Compass API (HTTP-based, returns raw dicts)
 │   │   │   └── compass_mock.py  # Synthetic data for testing
+│   │   ├── parsers/             # Data validation layer
+│   │   │   └── compass.py       # Transforms raw dicts → validated Pydantic models
 │   │   ├── db/                  # Database layer
 │   │   │   ├── database.py      # SQLAlchemy session, connection, schema
 │   │   │   ├── models.py        # ORM models (Credential, UserConfig, RawEvent, FilteredEvent, SyncMetadata)
 │   │   │   └── credentials.py   # Encrypted credential storage/retrieval
 │   │   ├── models/              # Pydantic/dataclass models
+│   │   │   ├── compass.py       # Compass API data models (CompassEvent, CompassUser)
 │   │   │   └── config.py        # User configuration models
 │   │   ├── api/                 # Flask REST API
 │   │   │   ├── routes.py        # Flask blueprint routes
@@ -137,17 +148,30 @@ For detailed information, see:
 1. **Compass HTTP Client** (`backend/bellweaver/adapters/compass.py`)
    - Direct HTTP authentication (no browser automation)
    - Fast performance (~1 second)
+   - Returns raw dict responses
    - Integration tests passing
 
 2. **Mock Client** (`backend/bellweaver/adapters/compass_mock.py`)
    - Realistic test data
    - Same interface as real client
 
-3. **LLM Filter** (`backend/bellweaver/filtering/llm_filter.py`)
+3. **Compass Parser** (`backend/bellweaver/parsers/compass.py`)
+   - Validates raw API responses into Pydantic models
+   - Type-safe domain models (CompassEvent, CompassUser)
+   - Comprehensive error handling
+   - Safe parsing with partial success support
+   - Full test coverage (22 tests passing)
+
+4. **Pydantic Models** (`backend/bellweaver/models/compass.py`)
+   - CompassEvent model with all fields
+   - CompassUser model with all fields
+   - Proper field aliases (camelCase → snake_case)
+
+5. **LLM Filter** (`backend/bellweaver/filtering/llm_filter.py`)
    - Claude API integration
    - Not yet integrated into pipeline
 
-4. **Credential Manager** (`backend/bellweaver/db/credentials.py`)
+6. **Credential Manager** (`backend/bellweaver/db/credentials.py`)
    - Fernet encryption
    - Not yet integrated with database
 
