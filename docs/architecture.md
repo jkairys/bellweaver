@@ -16,7 +16,7 @@ Bellweaver is a school calendar event aggregation and filtering tool. The MVP fo
 │  │  ├─ HTTP-based authentication                       │   │
 │  │  ├─ Session management with cookies                │   │
 │  │  ├─ Calendar event fetching                        │   │
-│  │  └─ Returns raw event data                         │   │
+│  │  └─ Returns raw event data (dicts)                 │   │
 │  └──────────────────────────────────────────────────────┘   │
 │                                                              │
 │  ┌──────────────────────────────────────────────────────┐   │
@@ -25,6 +25,14 @@ Bellweaver is a school calendar event aggregation and filtering tool. The MVP fo
 │  │  ├─ Realistic test data                            │   │
 │  │  ├─ No authentication required                     │   │
 │  │  └─ Same interface as real client                  │   │
+│  └──────────────────────────────────────────────────────┘   │
+│                                                              │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │ Compass Parser (parsers/compass.py)                 │   │
+│  │                                                      │   │
+│  │  ├─ Raw dict → Pydantic model validation           │   │
+│  │  ├─ Type safety and error handling                 │   │
+│  │  └─ Returns validated domain models                │   │
 │  └──────────────────────────────────────────────────────┘   │
 │                                                              │
 │  ┌──────────────────────────────────────────────────────┐   │
@@ -94,7 +102,51 @@ Bellweaver is a school calendar event aggregation and filtering tool. The MVP fo
 - CI/CD pipelines
 - Demonstrating functionality
 
-### 3. LLM Filter
+### 3. Compass Parser
+
+**File:** `backend/bellweaver/parsers/compass.py`
+
+**Features:**
+
+- Transforms raw API responses (dicts) into validated Pydantic models
+- Separates HTTP communication concerns from data validation
+- Provides type safety and IDE autocomplete
+- Comprehensive error handling with detailed validation errors
+
+**Architecture Pattern:**
+
+```
+Raw API → Adapter (dicts) → Parser (Pydantic) → Application
+```
+
+**Key Methods:**
+
+- `parse(model, raw)` - Generic method that parses any Pydantic model (single or list)
+- `parse_safe(model, raw_list)` - Parse list with partial success handling
+
+**Generic Design:**
+
+Uses Python `TypeVar` to provide a single, scalable interface instead of separate methods for each model type. Simply pass the model class and raw data:
+
+```python
+# Parse events
+events = CompassParser.parse(CompassEvent, raw_events_list)
+# Parse user
+user = CompassParser.parse(CompassUser, raw_user_dict)
+# Safe parsing with error collection
+valid_events, errors = CompassParser.parse_safe(CompassEvent, raw_events_list)
+```
+
+**Benefits:**
+
+1. **Separation of Concerns** - Adapter handles HTTP, parser handles validation
+2. **Scalability** - Single generic interface works with any Pydantic model
+3. **Flexibility** - Can work with raw dicts or validated models
+4. **Error Handling** - Clear distinction between network and validation errors
+5. **Testing** - Independent testing of HTTP layer and validation layer
+6. **Type Safety** - Full IDE autocomplete with Python generics
+
+### 4. LLM Filter
 
 **File:** `backend/bellweaver/filtering/llm_filter.py`
 
@@ -107,7 +159,7 @@ Bellweaver is a school calendar event aggregation and filtering tool. The MVP fo
 
 **Status:** Implemented but not yet integrated into pipeline
 
-### 4. Credential Manager
+### 5. Credential Manager
 
 **File:** `backend/bellweaver/db/credentials.py`
 
@@ -161,6 +213,37 @@ Display (Web UI / CLI)
 ```
 
 ## Technical Decisions
+
+### Why Three-Layer Architecture (Adapter → Parser → Application)?
+
+We chose to separate the adapter layer (HTTP communication) from the parser layer (validation) for several key reasons:
+
+**Separation of Concerns:**
+- Adapters focus solely on HTTP communication, authentication, and API quirks
+- Parsers handle validation, transformation, and type safety
+- Application code works with clean, validated domain models
+
+**Flexibility:**
+- Easy to swap between real and mock adapters (both return simple dicts)
+- Can handle API changes without touching business logic
+- Allows partial parsing (extract just what you need)
+- Can store raw JSON for audit trail and re-parse with updated models
+
+**Error Handling:**
+- Network errors vs validation errors are clearly separated
+- Can gracefully handle malformed API responses
+- Better debugging: know immediately if the issue is connectivity or data quality
+
+**Testing:**
+- Adapter tests use simple dict fixtures
+- Parser tests validate Pydantic models independently
+- Integration tests verify end-to-end flow
+- Each layer can be tested in isolation
+
+**Alternatives Considered:**
+
+1. **Adapter returns Pydantic models** - Rejected due to tight coupling and harder testing
+2. **Everything returns dicts** - Rejected due to no type safety and runtime errors
 
 ### Why HTTP Client Instead of Browser Automation?
 
