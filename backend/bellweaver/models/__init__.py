@@ -1,4 +1,4 @@
-"""Data models for Bellbird."""
+"""Data models for Bellweaver."""
 
 from bellweaver.models.compass import (
     CalendarEventLocation,

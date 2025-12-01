@@ -67,14 +67,15 @@ bellweaver/
 │   │   │   ├── compass.py       # Compass API data models (CompassEvent, CompassUser)
 │   │   │   └── config.py        # User configuration models
 │   │   ├── api/                 # Flask REST API
-│   │   │   ├── routes.py        # Flask blueprint routes
-│   │   │   └── schemas.py       # Request/response validation
+│   │   │   ├── __init__.py      # Flask application factory
+│   │   │   └── routes.py        # Domain-specific route handlers (user_bp, etc.)
 │   │   ├── cli/                 # Command-line interface
 │   │   │   ├── main.py          # Main CLI app and entry point
 │   │   │   └── commands/        # CLI command modules
 │   │   │       ├── mock.py      # Mock data management
-│   │   │       └── compass.py   # Compass sync commands
-│   │   └── app.py               # Flask application factory
+│   │   │       ├── compass.py   # Compass sync commands
+│   │   │       └── api.py       # API server commands
+│   │   └── app.py               # DEPRECATED: Use 'bellweaver.api' instead
 │   ├── tests/                    # Unit & integration tests
 │   ├── data/                     # Runtime data directory (gitignored)
 │   │   └── bellweaver.db         # SQLite database created at runtime
@@ -210,20 +211,27 @@ For detailed information, see:
        - Fetches calendar events for current calendar year or custom date range
        - Stores raw API responses in ApiPayload table
        - Usage: `poetry run bellweaver compass sync [--days N] [--limit N]`
+   - `commands/api.py`: API server management commands
+     - **serve**: Starts the Flask API server
+       - Supports custom host and port configuration
+       - Debug mode with auto-reloader available
+       - Usage: `poetry run bellweaver api serve [--host HOST] [--port PORT] [--debug]`
    - All 75 tests passing
 
-8. **Flask API** (`backend/bellweaver/app.py`)
-   - Flask application factory pattern
+8. **Flask API** (`backend/bellweaver/api/`)
+   - Flask application factory pattern in modular structure
+   - `__init__.py`: Application factory (create_app)
+   - `routes.py`: Domain-specific route blueprints
    - REST API endpoints for accessing aggregated data
    - Routes implemented:
      - **GET /user**: Returns latest user details from Compass
        - Fetches most recent get_user_details batch
        - Parses payloads using CompassUser Pydantic model
        - Returns parsed JSON with batch metadata
-   - Usage: `poetry run python -m bellweaver.app`
-   - Environment variables:
-     - `FLASK_DEBUG=true` to enable debug mode and reloader
-   - Note: Debug reloader can cause database connection issues; disabled by default
+   - Usage:
+     - **Recommended**: `poetry run bellweaver api serve [--debug]`
+     - **Legacy**: `poetry run python -m bellweaver.app` (deprecated)
+   - Note: Backward compatibility maintained via `bellweaver/app.py`
 
 ### What's Not Built ⏳
 

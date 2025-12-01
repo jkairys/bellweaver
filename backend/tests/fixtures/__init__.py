@@ -1,13 +1,12 @@
 """
-Test fixtures for Bellbird.
+Test fixtures for Bellweaver.
 
 Provides easy access to sample data for testing.
 """
 
 import json
 from pathlib import Path
-from typing import List, Dict, Any
-
+from typing import Any, Dict, List
 
 _FIXTURES_DIR = Path(__file__).parent
 
@@ -19,7 +18,7 @@ def load_compass_sample_events() -> List[Dict[str, Any]]:
     Returns:
         List of calendar event dictionaries matching Compass API response format
     """
-    fixture_file = _FIXTURES_DIR / 'compass_sample_response.json'
+    fixture_file = _FIXTURES_DIR / "compass_sample_response.json"
     with open(fixture_file) as f:
         return json.load(f)
 
