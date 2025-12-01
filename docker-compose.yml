@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  bellweaver:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bellweaver
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_DEBUG=false
+      - DATABASE_PATH=/app/data/bellweaver.db
+      # Mount .env file or set these directly
+      - COMPASS_USERNAME=${COMPASS_USERNAME}
+      - COMPASS_PASSWORD=${COMPASS_PASSWORD}
+      - COMPASS_BASE_URL=${COMPASS_BASE_URL}
+    volumes:
+      # Persist database outside container
+      - ./data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:5000/api/user', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s

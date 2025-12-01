@@ -4,7 +4,9 @@ Flask application factory for Bellweaver API.
 Provides REST API endpoints for accessing aggregated school calendar events.
 """
 
-from flask import Flask
+import os
+from pathlib import Path
+from flask import Flask, send_from_directory
 
 from bellweaver.db.database import init_db
 from bellweaver.api.routes import register_routes
@@ -17,7 +19,14 @@ def create_app() -> Flask:
     Returns:
         Configured Flask application instance
     """
-    app = Flask(__name__)
+    # Determine static folder path (for production Docker build)
+    static_folder = Path(__file__).parent.parent / "static"
+
+    # Only set static_folder if it exists (production mode)
+    if static_folder.exists():
+        app = Flask(__name__, static_folder=str(static_folder), static_url_path="")
+    else:
+        app = Flask(__name__)
 
     # Initialize database on startup
     with app.app_context():
@@ -25,6 +34,16 @@ def create_app() -> Flask:
 
     # Register all route blueprints
     register_routes(app)
+
+    # Serve frontend static files in production
+    if static_folder.exists():
+        @app.route("/", defaults={"path": ""})
+        @app.route("/<path:path>")
+        def serve_frontend(path):
+            """Serve React frontend static files or index.html for client-side routing."""
+            if path and (static_folder / path).exists():
+                return send_from_directory(static_folder, path)
+            return send_from_directory(static_folder, "index.html")
 
     return app
 
