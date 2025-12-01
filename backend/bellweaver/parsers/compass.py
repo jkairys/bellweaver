@@ -10,6 +10,7 @@ validated Pydantic models. It separates concerns:
 Example usage:
     >>> from bellweaver.adapters.compass import CompassClient
     >>> from bellweaver.parsers.compass import CompassParser
+    >>> from bellweaver.models.compass import CompassEvent, CompassUser
     >>>
     >>> client = CompassClient(base_url, username, password)
     >>> client.login()
@@ -17,17 +18,23 @@ Example usage:
     >>> # Get raw data from adapter
     >>> raw_events = client.get_calendar_events("2025-01-01", "2025-01-31")
     >>>
-    >>> # Parse into validated models
-    >>> events = CompassParser.parse_events(raw_events)
+    >>> # Parse into validated models using generic method
+    >>> events = CompassParser.parse(CompassEvent, raw_events)
     >>> for event in events:
     ...     print(f"{event.title} at {event.start}")
+    >>>
+    >>> # Parse user details
+    >>> raw_user = client.get_user_details()
+    >>> user = CompassParser.parse(CompassUser, raw_user)
+    >>> print(user.user_full_name)
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Type, TypeVar
 
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
-from bellweaver.models.compass import CompassEvent, CompassUser
+# Generic type variable for any Pydantic model
+T = TypeVar("T", bound=BaseModel)
 
 
 class CompassParseError(Exception):
@@ -51,99 +58,143 @@ class CompassParser:
     """
     Parser for Compass Education API responses.
 
-    Transforms raw API responses (dicts) into validated Pydantic models.
+    Transforms raw API responses (dicts) into validated Pydantic models using generics.
     Provides clear separation between HTTP communication and data validation.
+
+    This parser uses Python generics (TypeVar) to provide a single, scalable interface
+    for parsing any Pydantic model, rather than having separate methods for each model type.
     """
 
     @staticmethod
-    def parse_event(raw: Dict[str, Any]) -> CompassEvent:
+    def parse(model: Type[T], raw: Dict[str, Any] | List[Dict[str, Any]]) -> T | List[T]:
         """
-        Parse and validate a single calendar event.
+        Parse and validate raw data into a Pydantic model.
+
+        This is a generic method that works with any Pydantic model type.
+        Automatically detects whether raw data is a single dict or a list.
 
         Args:
-            raw: Raw event dictionary from Compass API
+            model: The Pydantic model class to parse into
+            raw: Raw data from API (single dict or list of dicts)
 
         Returns:
-            Validated CompassEvent model
+            Validated model instance or list of instances (type matches input)
+
+        Raises:
+            CompassParseError: If validation fails
+
+        Example:
+            >>> from bellweaver.models.compass import CompassEvent, CompassUser
+            >>> # Parse single object
+            >>> event = CompassParser.parse(CompassEvent, raw_event_dict)
+            >>> # Parse list of objects
+            >>> events = CompassParser.parse(CompassEvent, raw_events_list)
+            >>> user = CompassParser.parse(CompassUser, raw_user_dict)
+        """
+        # Handle list vs single object
+        if isinstance(raw, list):
+            return CompassParser._parse_list(model, raw)
+        else:
+            return CompassParser._parse_single(model, raw)
+
+    @staticmethod
+    def _parse_single(model: Type[T], raw: Dict[str, Any]) -> T:
+        """
+        Parse a single object.
+
+        Args:
+            model: The Pydantic model class to parse into
+            raw: Raw dictionary from API
+
+        Returns:
+            Validated model instance
 
         Raises:
             CompassParseError: If validation fails
         """
         try:
-            return CompassEvent.model_validate(raw)
+            return model.model_validate(raw)
         except ValidationError as e:
             raise CompassParseError(
-                f"Failed to parse Compass event: {e.error_count()} validation error(s)",
+                f"Failed to parse {model.__name__}: {e.error_count()} validation error(s)",
                 raw_data=raw,
                 validation_errors=e.errors(),
             ) from e
 
     @staticmethod
-    def parse_events(raw_list: List[Dict[str, Any]]) -> List[CompassEvent]:
+    def _parse_list(model: Type[T], raw_list: List[Dict[str, Any]]) -> List[T]:
         """
-        Parse and validate multiple calendar events.
+        Parse a list of objects (strict mode - fails on first error).
 
         Args:
-            raw_list: List of raw event dictionaries from Compass API
+            model: The Pydantic model class to parse into
+            raw_list: List of raw dictionaries from API
 
         Returns:
-            List of validated CompassEvent models
+            List of validated model instances
 
         Raises:
-            CompassParseError: If any event fails validation
+            CompassParseError: If any item fails validation
 
         Note:
             Stops at first validation error. For partial parsing with error handling,
-            use parse_events_safe() instead.
+            use parse_safe() instead.
         """
         try:
-            return [CompassEvent.model_validate(event) for event in raw_list]
+            return [model.model_validate(item) for item in raw_list]
         except ValidationError as e:
-            # Find which event failed (if possible)
-            for idx, event in enumerate(raw_list):
+            # Find which item failed (if possible)
+            for idx, item in enumerate(raw_list):
                 try:
-                    CompassEvent.model_validate(event)
+                    model.model_validate(item)
                 except ValidationError:
                     raise CompassParseError(
-                        f"Failed to parse Compass event at index {idx}: {e.error_count()} validation error(s)",
-                        raw_data=event,
+                        f"Failed to parse {model.__name__} at index {idx}: {e.error_count()} validation error(s)",
+                        raw_data=item,
                         validation_errors=e.errors(),
                     ) from e
-            # If we can't find the specific event, raise generic error
+            # If we can't find the specific item, raise generic error
             raise CompassParseError(
-                f"Failed to parse Compass events: {e.error_count()} validation error(s)",
+                f"Failed to parse {model.__name__} list: {e.error_count()} validation error(s)",
                 raw_data=raw_list,
                 validation_errors=e.errors(),
             ) from e
 
     @staticmethod
-    def parse_events_safe(
-        raw_list: List[Dict[str, Any]], skip_invalid: bool = True
-    ) -> tuple[List[CompassEvent], List[CompassParseError]]:
+    def parse_safe(
+        model: Type[T], raw_list: List[Dict[str, Any]], skip_invalid: bool = True
+    ) -> tuple[List[T], List[CompassParseError]]:
         """
-        Parse calendar events with error handling for individual items.
+        Parse a list with error handling for individual items (safe mode).
 
         Args:
-            raw_list: List of raw event dictionaries from Compass API
-            skip_invalid: If True, skip invalid events and continue parsing.
-                         If False, collect errors but parse all valid events.
+            model: The Pydantic model class to parse into
+            raw_list: List of raw dictionaries from API
+            skip_invalid: If True, skip invalid items and continue parsing.
+                         If False, collect errors but parse all valid items.
 
         Returns:
-            Tuple of (valid_events, errors):
-                - valid_events: List of successfully parsed CompassEvent models
-                - errors: List of CompassParseError for failed events
+            Tuple of (valid_items, errors):
+                - valid_items: List of successfully parsed model instances
+                - errors: List of CompassParseError for failed items
+
+        Example:
+            >>> events, errors = CompassParser.parse_safe(CompassEvent, raw_events)
+            >>> print(f"Parsed {len(events)} events, {len(errors)} failed")
+            >>> for error in errors:
+            ...     print(f"Error: {error}")
         """
-        valid_events: List[CompassEvent] = []
+        valid_items: List[T] = []
         errors: List[CompassParseError] = []
 
-        for idx, raw_event in enumerate(raw_list):
+        for idx, raw_item in enumerate(raw_list):
             try:
-                event = CompassEvent.model_validate(raw_event)
-                valid_events.append(event)
+                item = model.model_validate(raw_item)
+                valid_items.append(item)
             except ValidationError as e:
                 error = CompassParseError(
-                    f"Failed to parse event at index {idx}: {e.error_count()} validation error(s)",
-                    raw_data=raw_event,
+                    f"Failed to parse {model.__name__} at index {idx}: {e.error_count()} validation error(s)",
+                    raw_data=raw_item,
                     validation_errors=e.errors(),
                 )
                 errors.append(error)
@@ -151,61 +202,4 @@ class CompassParser:
                     # Still collect the error but continue parsing
                     continue
 
-        return valid_events, errors
-
-    @staticmethod
-    def parse_user(raw: Dict[str, Any]) -> CompassUser:
-        """
-        Parse and validate user details.
-
-        Args:
-            raw: Raw user details dictionary from Compass API
-
-        Returns:
-            Validated CompassUser model
-
-        Raises:
-            CompassParseError: If validation fails
-        """
-        try:
-            return CompassUser.model_validate(raw)
-        except ValidationError as e:
-            raise CompassParseError(
-                f"Failed to parse Compass user: {e.error_count()} validation error(s)",
-                raw_data=raw,
-                validation_errors=e.errors(),
-            ) from e
-
-    @staticmethod
-    def parse_users(raw_list: List[Dict[str, Any]]) -> List[CompassUser]:
-        """
-        Parse and validate multiple user details.
-
-        Args:
-            raw_list: List of raw user dictionaries from Compass API
-
-        Returns:
-            List of validated CompassUser models
-
-        Raises:
-            CompassParseError: If any user fails validation
-        """
-        try:
-            return [CompassUser.model_validate(user) for user in raw_list]
-        except ValidationError as e:
-            # Find which user failed (if possible)
-            for idx, user in enumerate(raw_list):
-                try:
-                    CompassUser.model_validate(user)
-                except ValidationError:
-                    raise CompassParseError(
-                        f"Failed to parse Compass user at index {idx}: {e.error_count()} validation error(s)",
-                        raw_data=user,
-                        validation_errors=e.errors(),
-                    ) from e
-            # If we can't find the specific user, raise generic error
-            raise CompassParseError(
-                f"Failed to parse Compass users: {e.error_count()} validation error(s)",
-                raw_data=raw_list,
-                validation_errors=e.errors(),
-            ) from e
+        return valid_items, errors

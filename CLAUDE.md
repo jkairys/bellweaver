@@ -156,8 +156,9 @@ For detailed information, see:
    - Same interface as real client
 
 3. **Compass Parser** (`backend/bellweaver/parsers/compass.py`)
-   - Validates raw API responses into Pydantic models
-   - Type-safe domain models (CompassEvent, CompassUser)
+   - Generic parser using Python TypeVar
+   - Single `parse()` method works with any Pydantic model
+   - Validates raw API responses into type-safe models
    - Comprehensive error handling
    - Safe parsing with partial success support
    - Full test coverage (22 tests passing)

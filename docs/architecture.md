@@ -121,19 +121,30 @@ Raw API → Adapter (dicts) → Parser (Pydantic) → Application
 
 **Key Methods:**
 
-- `parse_event()` - Parse single calendar event
-- `parse_events()` - Parse multiple events (fails on first error)
-- `parse_events_safe()` - Parse with partial success handling
-- `parse_user()` - Parse user details
-- `parse_users()` - Parse multiple users
+- `parse(model, raw)` - Generic method that parses any Pydantic model (single or list)
+- `parse_safe(model, raw_list)` - Parse list with partial success handling
+
+**Generic Design:**
+
+Uses Python `TypeVar` to provide a single, scalable interface instead of separate methods for each model type. Simply pass the model class and raw data:
+
+```python
+# Parse events
+events = CompassParser.parse(CompassEvent, raw_events_list)
+# Parse user
+user = CompassParser.parse(CompassUser, raw_user_dict)
+# Safe parsing with error collection
+valid_events, errors = CompassParser.parse_safe(CompassEvent, raw_events_list)
+```
 
 **Benefits:**
 
 1. **Separation of Concerns** - Adapter handles HTTP, parser handles validation
-2. **Flexibility** - Can work with raw dicts or validated models
-3. **Error Handling** - Clear distinction between network and validation errors
-4. **Testing** - Independent testing of HTTP layer and validation layer
-5. **Performance** - Optional lazy validation
+2. **Scalability** - Single generic interface works with any Pydantic model
+3. **Flexibility** - Can work with raw dicts or validated models
+4. **Error Handling** - Clear distinction between network and validation errors
+5. **Testing** - Independent testing of HTTP layer and validation layer
+6. **Type Safety** - Full IDE autocomplete with Python generics
 
 ### 4. LLM Filter
 

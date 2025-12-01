@@ -116,7 +116,7 @@ class TestCompassParserEvent:
 
     def test_parse_event_success(self, valid_event_raw):
         """Test successful parsing of a valid event."""
-        event = CompassParser.parse_event(valid_event_raw)
+        event = CompassParser.parse(CompassEvent, valid_event_raw)
 
         assert isinstance(event, CompassEvent)
         assert event.activity_id == 12345
@@ -129,7 +129,7 @@ class TestCompassParserEvent:
 
     def test_parse_event_with_alias_fields(self, valid_event_raw):
         """Test that camelCase fields are correctly mapped to snake_case."""
-        event = CompassParser.parse_event(valid_event_raw)
+        event = CompassParser.parse(CompassEvent, valid_event_raw)
 
         # Check that aliases work correctly
         assert event.activity_id == valid_event_raw["activityId"]
@@ -142,7 +142,7 @@ class TestCompassParserEvent:
         del valid_event_raw["activityId"]
 
         with pytest.raises(CompassParseError) as exc_info:
-            CompassParser.parse_event(valid_event_raw)
+            CompassParser.parse(CompassEvent, valid_event_raw)
 
         error = exc_info.value
         assert "validation error" in str(error).lower()
@@ -154,7 +154,7 @@ class TestCompassParserEvent:
         valid_event_raw["activityId"] = "not-an-integer"
 
         with pytest.raises(CompassParseError) as exc_info:
-            CompassParser.parse_event(valid_event_raw)
+            CompassParser.parse(CompassEvent, valid_event_raw)
 
         error = exc_info.value
         assert error.raw_data == valid_event_raw
@@ -165,7 +165,7 @@ class TestCompassParserEvent:
         valid_event_raw["start"] = "invalid-date"
 
         with pytest.raises(CompassParseError):
-            CompassParser.parse_event(valid_event_raw)
+            CompassParser.parse(CompassEvent, valid_event_raw)
 
     def test_parse_events_success(self, valid_event_raw):
         """Test successful parsing of multiple events."""
@@ -174,7 +174,7 @@ class TestCompassParserEvent:
         event2["title"] = "Science"
 
         raw_events = [valid_event_raw, event2]
-        events = CompassParser.parse_events(raw_events)
+        events = CompassParser.parse(CompassEvent, raw_events)
 
         assert len(events) == 2
         assert all(isinstance(e, CompassEvent) for e in events)
@@ -185,7 +185,7 @@ class TestCompassParserEvent:
 
     def test_parse_events_empty_list(self):
         """Test parsing empty list returns empty list."""
-        events = CompassParser.parse_events([])
+        events = CompassParser.parse(CompassEvent, [])
         assert events == []
 
     def test_parse_events_one_invalid(self, valid_event_raw):
@@ -196,7 +196,7 @@ class TestCompassParserEvent:
         raw_events = [valid_event_raw, invalid_event]
 
         with pytest.raises(CompassParseError) as exc_info:
-            CompassParser.parse_events(raw_events)
+            CompassParser.parse(CompassEvent, raw_events)
 
         error = exc_info.value
         assert "index 1" in str(error).lower()
@@ -207,7 +207,7 @@ class TestCompassParserEvent:
         event2["activityId"] = 99999
 
         raw_events = [valid_event_raw, event2]
-        valid_events, errors = CompassParser.parse_events_safe(raw_events)
+        valid_events, errors = CompassParser.parse_safe(CompassEvent, raw_events)
 
         assert len(valid_events) == 2
         assert len(errors) == 0
@@ -219,7 +219,7 @@ class TestCompassParserEvent:
         del invalid_event["activityId"]
 
         raw_events = [valid_event_raw, invalid_event]
-        valid_events, errors = CompassParser.parse_events_safe(raw_events)
+        valid_events, errors = CompassParser.parse_safe(CompassEvent, raw_events)
 
         assert len(valid_events) == 1
         assert len(errors) == 1
@@ -233,7 +233,7 @@ class TestCompassParserEvent:
         del invalid_event["activityId"]
 
         raw_events = [invalid_event, invalid_event]
-        valid_events, errors = CompassParser.parse_events_safe(raw_events)
+        valid_events, errors = CompassParser.parse_safe(CompassEvent, raw_events)
 
         assert len(valid_events) == 0
         assert len(errors) == 2
@@ -293,7 +293,7 @@ class TestCompassParserUser:
 
     def test_parse_user_success(self, valid_user_raw):
         """Test successful parsing of a valid user."""
-        user = CompassParser.parse_user(valid_user_raw)
+        user = CompassParser.parse(CompassUser, valid_user_raw)
 
         assert isinstance(user, CompassUser)
         assert user.user_id == 67890
@@ -305,7 +305,7 @@ class TestCompassParserUser:
 
     def test_parse_user_with_alias_fields(self, valid_user_raw):
         """Test that camelCase fields are correctly mapped to snake_case."""
-        user = CompassParser.parse_user(valid_user_raw)
+        user = CompassParser.parse(CompassUser, valid_user_raw)
 
         assert user.user_id == valid_user_raw["userId"]
         assert user.user_first_name == valid_user_raw["userFirstName"]
@@ -317,7 +317,7 @@ class TestCompassParserUser:
         del valid_user_raw["userId"]
 
         with pytest.raises(CompassParseError) as exc_info:
-            CompassParser.parse_user(valid_user_raw)
+            CompassParser.parse(CompassUser, valid_user_raw)
 
         error = exc_info.value
         assert "validation error" in str(error).lower()
@@ -329,7 +329,7 @@ class TestCompassParserUser:
         valid_user_raw["userId"] = "not-an-integer"
 
         with pytest.raises(CompassParseError) as exc_info:
-            CompassParser.parse_user(valid_user_raw)
+            CompassParser.parse(CompassUser, valid_user_raw)
 
         error = exc_info.value
         assert error.raw_data == valid_user_raw
@@ -341,7 +341,7 @@ class TestCompassParserUser:
         user2["userFirstName"] = "Jane"
 
         raw_users = [valid_user_raw, user2]
-        users = CompassParser.parse_users(raw_users)
+        users = CompassParser.parse(CompassUser, raw_users)
 
         assert len(users) == 2
         assert all(isinstance(u, CompassUser) for u in users)
@@ -352,7 +352,7 @@ class TestCompassParserUser:
 
     def test_parse_users_empty_list(self):
         """Test parsing empty list returns empty list."""
-        users = CompassParser.parse_users([])
+        users = CompassParser.parse(CompassUser, [])
         assert users == []
 
     def test_parse_users_one_invalid(self, valid_user_raw):
@@ -363,7 +363,7 @@ class TestCompassParserUser:
         raw_users = [valid_user_raw, invalid_user]
 
         with pytest.raises(CompassParseError) as exc_info:
-            CompassParser.parse_users(raw_users)
+            CompassParser.parse(CompassUser, raw_users)
 
         error = exc_info.value
         assert "index 1" in str(error).lower()
