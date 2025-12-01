@@ -6,7 +6,7 @@ Provides REST API endpoints for accessing aggregated school calendar events.
 
 import os
 from pathlib import Path
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, abort
 
 from bellweaver.db.database import init_db
 from bellweaver.api.routes import register_routes
@@ -41,6 +41,10 @@ def create_app() -> Flask:
         @app.route("/<path:path>")
         def serve_frontend(path):
             """Serve React frontend static files or index.html for client-side routing."""
+            # Don't serve frontend for API routes - let them 404 if not found
+            if path.startswith("api/"):
+                abort(404)
+
             if path and (static_folder / path).exists():
                 return send_from_directory(static_folder, path)
             return send_from_directory(static_folder, "index.html")
