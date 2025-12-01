@@ -5,8 +5,9 @@ Handles secure storage and retrieval of user credentials using Fernet encryption
 """
 
 import os
-from cryptography.fernet import Fernet
 from typing import Optional, Tuple
+
+from cryptography.fernet import Fernet
 
 
 class CredentialManager:
@@ -28,7 +29,7 @@ class CredentialManager:
     def _init_cipher(self, encryption_key: Optional[str]) -> Fernet:
         """Initialize Fernet cipher with key."""
         if encryption_key is None:
-            encryption_key = os.getenv('BELLWEAVER_ENCRYPTION_KEY')
+            encryption_key = os.getenv("BELLWEAVER_ENCRYPTION_KEY")
 
         if encryption_key is None:
             # Generate new key and save to .env
@@ -44,17 +45,15 @@ class CredentialManager:
         encrypted_password = self.cipher.encrypt(password.encode()).decode()
 
         # Store in database (replace if exists)
-        from src.db.models import Credential
+        from bellweaver.db.models import Credential
 
-        cred = self.db_session.query(Credential).filter_by(source='compass').first()
+        cred = self.db_session.query(Credential).filter_by(source="compass").first()
         if cred:
             cred.username = username
             cred.password_encrypted = encrypted_password
         else:
             cred = Credential(
-                source='compass',
-                username=username,
-                password_encrypted=encrypted_password
+                source="compass", username=username, password_encrypted=encrypted_password
             )
             self.db_session.add(cred)
 
@@ -62,9 +61,9 @@ class CredentialManager:
 
     def load_compass_credentials(self) -> Optional[Tuple[str, str]]:
         """Load and decrypt Compass credentials."""
-        from src.db.models import Credential
+        from bellweaver.db.models import Credential
 
-        cred = self.db_session.query(Credential).filter_by(source='compass').first()
+        cred = self.db_session.query(Credential).filter_by(source="compass").first()
         if not cred:
             return None
 
