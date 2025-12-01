@@ -146,30 +146,30 @@ poetry run pytest
 **Full end-to-end sync** (fetch + filter):
 
 ```bash
-poetry run bellbird --full
+poetry run bellweaver --full
 ```
 
 **Individual steps**:
 
 ```bash
 # Just fetch from Compass (or mock)
-poetry run bellbird --fetch
+poetry run bellweaver --fetch
 
 # Filter cached events
-poetry run bellbird --filter
+poetry run bellweaver --filter
 
 # Show filtered results
-poetry run bellbird --show-filtered
+poetry run bellweaver --show-filtered
 ```
 
 **Configuration**:
 
 ```bash
 # Set Compass credentials (encrypted in SQLite)
-poetry run bellbird --set-credentials compass --username your@email.com --password yourpassword
+poetry run bellweaver --set-credentials compass --username your@email.com --password yourpassword
 
 # Configure child profile
-poetry run bellbird --set-config \
+poetry run bellweaver --set-config \
   --child-name "Sophia" \
   --school "St Mary's Primary" \
   --year-level "Year 3" \
