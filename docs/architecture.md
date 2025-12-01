@@ -49,9 +49,10 @@ Bellweaver is a school calendar event aggregation and filtering tool. The MVP fo
 
 ### 1. Compass Client (HTTP-based)
 
-**File:** `backend/src/adapters/compass.py`
+**File:** `backend/bellweaver/adapters/compass.py`
 
 **Features:**
+
 - Direct HTTP requests using Python `requests` library
 - Form-based authentication with ASP.NET ViewState handling
 - Session management with cookie persistence
@@ -59,6 +60,7 @@ Bellweaver is a school calendar event aggregation and filtering tool. The MVP fo
 - Automatic userId and schoolConfigKey extraction
 
 **Authentication Flow:**
+
 1. GET login page to extract ViewState and form parameters
 2. POST credentials with form data
 3. Capture session cookies
@@ -68,6 +70,7 @@ Bellweaver is a school calendar event aggregation and filtering tool. The MVP fo
 **Performance:** ~1 second total (authentication + event fetch)
 
 **Advantages:**
+
 - No browser dependencies
 - Fast authentication
 - Lower resource usage
@@ -75,15 +78,17 @@ Bellweaver is a school calendar event aggregation and filtering tool. The MVP fo
 
 ### 2. Mock Client
 
-**File:** `backend/src/adapters/compass_mock.py`
+**File:** `backend/bellweaver/adapters/compass_mock.py`
 
 **Features:**
+
 - Realistic synthetic calendar events
 - No authentication required
 - Identical interface to real Compass client
 - Supports development without credentials
 
 **Use Cases:**
+
 - Testing filtering logic
 - Frontend development
 - CI/CD pipelines
@@ -91,9 +96,10 @@ Bellweaver is a school calendar event aggregation and filtering tool. The MVP fo
 
 ### 3. LLM Filter
 
-**File:** `backend/src/filtering/llm_filter.py`
+**File:** `backend/bellweaver/filtering/llm_filter.py`
 
 **Features:**
+
 - Claude API integration
 - Event relevance determination
 - Event summarization
@@ -103,9 +109,10 @@ Bellweaver is a school calendar event aggregation and filtering tool. The MVP fo
 
 ### 4. Credential Manager
 
-**File:** `backend/src/db/credentials.py`
+**File:** `backend/bellweaver/db/credentials.py`
 
 **Features:**
+
 - Fernet symmetric encryption
 - Secure credential storage
 - Environment-based encryption keys
@@ -115,21 +122,25 @@ Bellweaver is a school calendar event aggregation and filtering tool. The MVP fo
 ## Planned Components
 
 ### Database Layer
+
 - SQLite for local development
 - SQLAlchemy ORM models
 - Tables: credentials, user_config, raw_events, filtered_events, sync_metadata
 
 ### Flask API
+
 - REST endpoints for configuration and event retrieval
 - Request/response validation
 - Authentication middleware
 
 ### Web UI
+
 - Configuration interface
 - Event dashboard
 - Sync triggers
 
 ### CLI
+
 - Command-line interface for batch operations
 - Development and debugging tool
 
@@ -154,6 +165,7 @@ Display (Web UI / CLI)
 ### Why HTTP Client Instead of Browser Automation?
 
 We initially explored browser automation (Playwright) but discovered:
+
 - Cloudflare detects browser automation even with stealth plugins
 - HTTP client is simpler with no browser dependencies
 - Better Cloudflare bypass (simple requests look like mobile apps)
@@ -165,6 +177,7 @@ The HTTP client successfully authenticates without any prior browser sessions.
 ### Why SQLite?
 
 For the MVP:
+
 - No server setup required
 - Simple file-based storage
 - Good enough for single-user local development
@@ -180,12 +193,14 @@ For the MVP:
 ## Future Enhancements
 
 ### Multi-Source Support (Phase 2)
+
 - Class Dojo adapter
 - HubHello adapter
 - Xplore adapter
 - Event normalization layer
 
 ### Advanced Features
+
 - Google Calendar sync
 - Email/SMS notifications
 - Event tagging and categorization
@@ -193,6 +208,7 @@ For the MVP:
 - Mobile app
 
 ### Scalability
+
 - Deploy to Google Cloud Run
 - Job queue for event syncing
 - Caching layer (Redis)

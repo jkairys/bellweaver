@@ -20,24 +20,24 @@ Bellweaver is a school calendar event aggregation and filtering tool that consol
 
 ### What's Working ✅
 
-1. **Compass HTTP Client** (`backend/src/adapters/compass.py`)
+1. **Compass HTTP Client** (`backend/bellweaver/adapters/compass.py`)
    - Direct HTTP authentication (no browser automation)
    - Calendar event fetching from Compass API
    - Session management with cookies
    - Fast performance (~1 second total)
    - Integration tests passing
 
-2. **Mock Client** (`backend/src/adapters/compass_mock.py`)
+2. **Mock Client** (`backend/bellweaver/adapters/compass_mock.py`)
    - Realistic synthetic test data
    - Same interface as real client
    - No credentials required
 
-3. **LLM Filter** (`backend/src/filtering/llm_filter.py`)
+3. **LLM Filter** (`backend/bellweaver/filtering/llm_filter.py`)
    - Claude API integration implemented
    - Event filtering and summarization
    - Not yet integrated into pipeline
 
-4. **Credential Manager** (`backend/src/db/credentials.py`)
+4. **Credential Manager** (`backend/bellweaver/db/credentials.py`)
    - Fernet encryption implemented
    - Not yet integrated with database
 
@@ -52,6 +52,7 @@ Bellweaver is a school calendar event aggregation and filtering tool that consol
 ## Tech Stack
 
 ### Backend
+
 - **Language:** Python 3.10+
 - **Package Manager:** Poetry
 - **Web Framework:** Flask (planned)
@@ -61,6 +62,7 @@ Bellweaver is a school calendar event aggregation and filtering tool that consol
 - **LLM Integration:** Anthropic Claude API
 
 ### Development Tools
+
 - **Testing:** pytest + pytest-cov
 - **Formatting:** black
 - **Linting:** flake8
@@ -145,6 +147,7 @@ See `backend/.env.example` for full template.
 ### Phase 1: MVP Foundation (Current Phase)
 
 **Completed:**
+
 - [x] Compass HTTP client implementation
 - [x] Mock client for testing
 - [x] LLM filter implementation
@@ -153,6 +156,7 @@ See `backend/.env.example` for full template.
 - [x] Project structure and tooling
 
 **Next Steps:**
+
 - [ ] Database layer (SQLAlchemy models and schema)
 - [ ] Flask API routes
 - [ ] CLI interface
@@ -185,6 +189,7 @@ See `backend/.env.example` for full template.
 **Decision:** Use HTTP client with direct requests
 
 **Rationale:**
+
 - Cloudflare blocks browser automation (even with stealth)
 - HTTP client is faster (~1s vs ~10-15s)
 - Simpler deployment (no browser dependencies)
@@ -196,6 +201,7 @@ See `backend/.env.example` for full template.
 **Decision:** Start with SQLite for MVP
 
 **Rationale:**
+
 - No server setup required
 - Simple file-based storage
 - Good enough for single-user local development
@@ -206,6 +212,7 @@ See `backend/.env.example` for full template.
 **Decision:** Use symmetric encryption for credentials
 
 **Rationale:**
+
 - Simple and built-in to Python cryptography
 - Suitable for local credential storage
 - Key stored in environment (not in code)
@@ -214,18 +221,21 @@ See `backend/.env.example` for full template.
 ## Testing Strategy
 
 ### Integration Tests
+
 - Real Compass authentication
 - Calendar event fetching
 - Various date ranges
 - Error handling
 
 ### Unit Tests (Planned)
+
 - Database operations
 - Credential encryption/decryption
 - LLM filtering logic
 - API endpoints
 
 ### Test Data
+
 - Mock client with realistic synthetic events
 - Real Compass credentials for integration testing
 - Synthetic user configs for filtering tests
@@ -263,16 +273,19 @@ poetry install --with dev
 ## Git Workflow
 
 ### Current Status
+
 - **Branch:** main
 - **Recent Work:** Compass client implementation and testing
 
 ### Never Commit
+
 - `backend/.env` (contains credentials)
 - `backend/.venv/` (virtual environment)
 - `backend/data/` (user data and database)
 - `__pycache__/` and `.pytest_cache/`
 
 ### Commit Style
+
 - Clear, imperative tense
 - Component prefix (e.g., "adapters:", "db:", "docs:")
 - Example: "adapters: add HTTP-based Compass client"
@@ -305,6 +318,7 @@ poetry update
 ## Performance Notes
 
 ### Compass Client
+
 - Authentication: ~500ms
 - Event fetch: ~500ms
 - Total: ~1 second
@@ -312,6 +326,7 @@ poetry update
 - Session cookies reused within process
 
 ### Future Optimizations
+
 - Database session cookie persistence (optional)
 - Event caching to avoid repeated API calls
 - Background sync jobs
@@ -320,17 +335,20 @@ poetry update
 ## Security Considerations
 
 ### Credentials
+
 - Stored encrypted using Fernet
 - Encryption key in environment variable
 - Never committed to git
 - Database file gitignored
 
 ### API Keys
+
 - Claude API key in environment
 - Never hardcoded in source
 - Rotation supported via environment update
 
 ### Session Management
+
 - Cookies handled by requests.Session()
 - Auto-cleanup on process exit
 - Optional database persistence for cross-session reuse
@@ -338,6 +356,7 @@ poetry update
 ## Success Metrics
 
 ### MVP Success Criteria
+
 - User can authenticate with Compass
 - User can fetch calendar events
 - User can configure filtering rules
@@ -346,6 +365,7 @@ poetry update
 - System works reliably with real data
 
 ### Future Success Criteria
+
 - Support for 10+ concurrent users
 - 99% uptime
 - Automatic sync every 6 hours

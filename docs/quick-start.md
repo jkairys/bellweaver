@@ -68,7 +68,7 @@ poetry add --group dev package-name    # Development only
 ```
 bellweaver/
 ├── backend/
-│   ├── src/
+│   ├── bellweaver/
 │   │   ├── adapters/
 │   │   │   ├── compass.py         # ✅ HTTP-based Compass client (working)
 │   │   │   └── compass_mock.py    # ✅ Mock client for testing (working)
@@ -99,6 +99,7 @@ bellweaver/
 ## Troubleshooting
 
 **Poetry not finding packages?**
+
 ```bash
 cd backend
 poetry lock --refresh
@@ -106,6 +107,7 @@ poetry install --with dev
 ```
 
 **Virtual environment issues?**
+
 ```bash
 cd backend
 poetry env remove python
@@ -113,6 +115,7 @@ poetry install --with dev
 ```
 
 **Tests failing?**
+
 ```bash
 # Check .env file has correct credentials
 cat backend/.env

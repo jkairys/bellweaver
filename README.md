@@ -40,7 +40,7 @@ The MVP focuses on **Compass only** for local development:
 ```
 bellweaver/
 ├── backend/                      # Backend Python application
-│   ├── src/                      # Main Python package
+│   ├── bellweaver/                      # Main Python package
 │   │   ├── __init__.py
 │   │   ├── cli.py               # CLI entry point
 │   │   ├── app.py               # Flask app entry point

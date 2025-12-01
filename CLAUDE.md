@@ -44,7 +44,7 @@ This file documents key information about the Bellweaver project to help Claude 
 ```
 bellweaver/
 ├── backend/                      # Backend Python application
-│   ├── src/                      # Main application code
+│   ├── bellweaver/                      # Main application code
 │   │   ├── adapters/            # External API clients
 │   │   │   ├── compass.py       # Real Compass API (HTTP-based, no browser automation)
 │   │   │   └── compass_mock.py  # Synthetic data for testing
@@ -133,20 +133,20 @@ For detailed information, see:
 
 ### What's Working ✅
 
-1. **Compass HTTP Client** (`backend/src/adapters/compass.py`)
+1. **Compass HTTP Client** (`backend/bellweaver/adapters/compass.py`)
    - Direct HTTP authentication (no browser automation)
    - Fast performance (~1 second)
    - Integration tests passing
 
-2. **Mock Client** (`backend/src/adapters/compass_mock.py`)
+2. **Mock Client** (`backend/bellweaver/adapters/compass_mock.py`)
    - Realistic test data
    - Same interface as real client
 
-3. **LLM Filter** (`backend/src/filtering/llm_filter.py`)
+3. **LLM Filter** (`backend/bellweaver/filtering/llm_filter.py`)
    - Claude API integration
    - Not yet integrated into pipeline
 
-4. **Credential Manager** (`backend/src/db/credentials.py`)
+4. **Credential Manager** (`backend/bellweaver/db/credentials.py`)
    - Fernet encryption
    - Not yet integrated with database
 
