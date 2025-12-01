@@ -13,6 +13,7 @@ Bellweaver is a school calendar event aggregation and filtering tool that consol
 ## Quick Links
 
 - **[Quick Start Guide](quick-start.md)** - Get up and running in 5 minutes
+- **[Docker Deployment](docker-deployment.md)** - Production deployment with Docker
 - **[Architecture](architecture.md)** - System design and technical decisions
 - **[Main README](../README.md)** - Project overview
 
@@ -41,12 +42,43 @@ Bellweaver is a school calendar event aggregation and filtering tool that consol
    - Fernet encryption implemented
    - Not yet integrated with database
 
+5. **Database Layer** (`backend/bellweaver/db/`)
+   - SQLAlchemy 2.0 with DeclarativeBase
+   - Batch tracking for adapter method calls
+   - ApiPayload storage for raw API responses
+   - Encrypted credential storage
+   - Full test coverage (26 tests passing)
+
+6. **CLI Interface** (`backend/bellweaver/cli/`)
+   - Typer-based command-line interface
+   - Mock data management commands
+   - Compass sync commands (user details and events)
+   - API server management commands
+   - All 75 tests passing
+
+7. **Flask API** (`backend/bellweaver/api/`)
+   - Application factory pattern
+   - REST endpoints: `/api/user`, `/api/events`
+   - Static file serving for production frontend
+   - Health checks
+
+8. **React Frontend** (`frontend/`)
+   - Vite-based React application
+   - Dashboard displaying user details and events
+   - Responsive design with dark/light mode
+   - API service layer with error handling
+   - Development server with hot reload
+
+9. **Docker Deployment** (Root directory)
+   - Multi-stage Dockerfile (frontend + backend)
+   - Docker Compose configuration
+   - Single container serving both frontend and backend
+   - Health checks and volume persistence
+
 ### What's Not Built ⏳
 
-- Database layer (SQLAlchemy models, schema)
-- Flask API routes
-- Web UI
-- CLI interface
+- Event filtering by child/relevance
+- LLM-based event filtering integration
 - End-to-end pipeline integration
 
 ## Tech Stack
@@ -55,11 +87,24 @@ Bellweaver is a school calendar event aggregation and filtering tool that consol
 
 - **Language:** Python 3.10+
 - **Package Manager:** Poetry
-- **Web Framework:** Flask (planned)
-- **Database:** SQLite (planned)
-- **ORM:** SQLAlchemy (planned)
+- **Web Framework:** Flask
+- **Database:** SQLite
+- **ORM:** SQLAlchemy 2.0
 - **Encryption:** cryptography (Fernet)
 - **LLM Integration:** Anthropic Claude API
+- **CLI:** Typer
+
+### Frontend
+
+- **Framework:** React 18
+- **Build Tool:** Vite
+- **Styling:** CSS with dark/light mode
+
+### Deployment
+
+- **Containerization:** Docker with multi-stage builds
+- **Orchestration:** Docker Compose
+- **Reverse Proxy:** (Recommended for production: nginx, Traefik, or Caddy)
 
 ### Development Tools
 
