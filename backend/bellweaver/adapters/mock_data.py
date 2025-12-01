@@ -9,20 +9,24 @@ import json
 import os
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 
 from dotenv import load_dotenv
 
 from .compass import CompassClient
 
 
-def collect_compass_events(
+def collect_compass_data(
     days: int = 30,
     limit: int = 100,
     output_dir: Path | None = None,
-) -> List[Dict[str, Any]]:
+) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
     """
-    Collect calendar events from Compass and save as mock data.
+    Collect all data from Compass and save as mock data.
+
+    This collects:
+    - User details (for the authenticated user)
+    - Calendar events for the specified date range
 
     Args:
         days: Number of days ahead to fetch events for (default: 30)
@@ -30,7 +34,7 @@ def collect_compass_events(
         output_dir: Directory to save mock data to (default: backend/data/mock)
 
     Returns:
-        List of event dictionaries
+        Tuple of (user_details, events)
 
     Raises:
         ValueError: If required environment variables are not set
@@ -67,6 +71,14 @@ def collect_compass_events(
         # Authenticate
         client.login()
 
+        # Fetch user details
+        user_details = client.get_user_details()
+
+        # Save user details
+        user_file = output_dir / "compass_user.json"
+        with open(user_file, "w") as f:
+            json.dump(user_details, f, indent=2, default=str)
+
         # Fetch events
         start_date = datetime.now().strftime("%Y-%m-%d")
         end_date = (datetime.now() + timedelta(days=days)).strftime("%Y-%m-%d")
@@ -78,7 +90,7 @@ def collect_compass_events(
         with open(events_file, "w") as f:
             json.dump(events, f, indent=2, default=str)
 
-        return events
+        return user_details, events
 
     finally:
         client.close()
