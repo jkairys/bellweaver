@@ -270,6 +270,7 @@ class TestApiPayloadModel:
             adapter_id="compass",
             method_name="get_calendar_events",
             batch_id=batch.id,
+            external_id="12345",
             payload=payload_data,
         )
         temp_db.add(payload)
@@ -281,6 +282,7 @@ class TestApiPayloadModel:
         assert retrieved.adapter_id == "compass"
         assert retrieved.method_name == "get_calendar_events"
         assert retrieved.batch_id == batch.id
+        assert retrieved.external_id == "12345"
         assert retrieved.payload == payload_data
         assert isinstance(retrieved.created_at, datetime)
         assert isinstance(retrieved.id, str)
@@ -296,6 +298,7 @@ class TestApiPayloadModel:
             adapter_id="compass",
             method_name="get_calendar_events",
             batch_id=batch.id,
+            external_id="test-1",
             payload={"test": "data"},
         )
         temp_db.add(payload)
@@ -319,6 +322,7 @@ class TestApiPayloadModel:
                 adapter_id="compass",
                 method_name="get_calendar_events",
                 batch_id=batch.id,
+                external_id=f"event-{i}",
                 payload={"event_id": i},
             )
             payloads.append(payload)
@@ -347,6 +351,7 @@ class TestApiPayloadModel:
                 adapter_id=adapter,
                 method_name="get_events",
                 batch_id=batch.id,
+                external_id=f"{adapter}-event-1",
                 payload={"source": adapter},
             )
             temp_db.add(payload)
@@ -371,11 +376,12 @@ class TestApiPayloadModel:
         temp_db.add(batch)
         temp_db.commit()
 
-        for method in methods:
+        for i, method in enumerate(methods):
             payload = ApiPayload(
                 adapter_id="compass",
                 method_name=method,
                 batch_id=batch.id,
+                external_id=f"method-{i}",
                 payload={"method": method},
             )
             temp_db.add(payload)
@@ -414,6 +420,7 @@ class TestApiPayloadModel:
             adapter_id="compass",
             method_name="get_event_details",
             batch_id=batch.id,
+            external_id="12345",
             payload=complex_payload,
         )
         temp_db.add(payload)
@@ -438,6 +445,7 @@ class TestApiPayloadModel:
             adapter_id="compass",
             method_name="test",
             batch_id=batch.id,
+            external_id="test-1",
             payload=payload_data,
         )
         temp_db.add(payload)
@@ -459,6 +467,7 @@ class TestApiPayloadModel:
             adapter_id="compass",
             method_name="get_events",
             batch_id=batch.id,
+            external_id="test-repr",
             payload={"test": "data"},
         )
         temp_db.add(payload)
@@ -481,6 +490,7 @@ class TestApiPayloadModel:
                 adapter_id="compass",
                 method_name="test",
                 batch_id=batch.id,
+                external_id=f"test-{i}",
                 payload={"index": i},
             )
             temp_db.add(payload)
@@ -508,6 +518,7 @@ class TestApiPayloadModel:
             adapter_id="compass",
             method_name="get_events",
             batch_id=batch.id,
+            external_id="1",
             payload={"eventId": 1, "title": "Old Event"},
         )
 
@@ -516,6 +527,7 @@ class TestApiPayloadModel:
             adapter_id="compass",
             method_name="get_events",
             batch_id=batch.id,
+            external_id="2",
             payload={
                 "eventId": 2,
                 "title": "New Event",
@@ -561,6 +573,7 @@ class TestBatchApiPayloadRelationship:
                 adapter_id="compass",
                 method_name="get_calendar_events",
                 batch_id=batch.id,
+                external_id=f"event-{i}",
                 payload={"event_id": i},
             )
             temp_db.add(payload)
@@ -588,6 +601,7 @@ class TestBatchApiPayloadRelationship:
             adapter_id="compass",
             method_name="get_calendar_events",
             batch_id=batch.id,
+            external_id="event-1",
             payload={"event_id": 1},
         )
         temp_db.add(payload)
@@ -617,6 +631,7 @@ class TestBatchApiPayloadRelationship:
                 adapter_id="compass",
                 method_name="get_calendar_events",
                 batch_id=batch.id,
+                external_id=f"event-{i}",
                 payload={"event_id": i},
             )
             temp_db.add(payload)
@@ -643,6 +658,7 @@ class TestBatchApiPayloadRelationship:
             adapter_id="compass",
             method_name="get_calendar_events",
             batch_id=non_existent_batch_id,
+            external_id="orphan-1",
             payload={"event_id": 1},
         )
         temp_db.add(payload)
