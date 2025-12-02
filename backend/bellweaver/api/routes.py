@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from bellweaver.db.database import get_db
-from bellweaver.db.models import ApiPayload, Batch
+from bellweaver.db.models import ApiPayload, Batch, Event
 from bellweaver.models.compass import CompassUser, CompassEvent
 from bellweaver.parsers.compass import CompassParser
 
@@ -112,90 +112,81 @@ def get_user():
 @events_bp.route("", methods=["GET"])
 def get_events():
     """
-    Get calendar events from the latest events batch.
+    Get normalized calendar events from the database.
 
-    Fetches the most recent batch for the get_calendar_events method,
-    retrieves all API payloads within that batch, and parses them
-    using the CompassEvent Pydantic model.
+    Fetches all Event records from the database, ordered by start date.
+    These are platform-agnostic normalized events that have been processed
+    from raw API payloads.
 
     Returns:
-        JSON response with parsed event data or error message
+        JSON response with normalized event data or error message
 
     Example response:
         {
-            "batch_id": "uuid-string",
-            "created_at": "2025-12-01T12:00:00Z",
-            "parameters": {
-                "start_date": "2025-01-01",
-                "end_date": "2025-12-31",
-                "limit": 100
-            },
             "event_count": 42,
             "events": [
                 {
-                    "activity_id": 123,
+                    "id": "uuid-string",
                     "title": "School Assembly",
                     "description": "Whole school assembly",
                     "start": "2025-12-05T09:00:00Z",
-                    "finish": "2025-12-05T10:00:00Z",
-                    ...
+                    "end": "2025-12-05T10:00:00Z",
+                    "location": "Main Hall",
+                    "all_day": false,
+                    "organizer": null,
+                    "attendees": [],
+                    "status": "EventScheduled",
+                    "created_at": "2025-12-01T12:00:00Z",
+                    "updated_at": "2025-12-01T12:00:00Z"
                 },
                 ...
             ]
         }
+
+    Note:
+        If no events are found, this may indicate that the 'compass process'
+        command hasn't been run yet. Raw API data needs to be processed
+        into Event models first.
     """
     db: Session = next(get_db())
     try:
-        # Find the latest batch for get_calendar_events method
+        # Get all events ordered by start date
         stmt = (
-            select(Batch)
-            .where(Batch.method_name == "get_calendar_events")
-            .order_by(Batch.created_at.desc())
-            .limit(1)
+            select(Event)
+            .order_by(Event.start.asc())
         )
-        latest_batch = db.execute(stmt).scalar_one_or_none()
-
-        if not latest_batch:
-            return jsonify({"error": "No calendar event batches found"}), 404
-
-        # Get all API payloads for this batch
-        stmt = select(ApiPayload).where(ApiPayload.batch_id == latest_batch.id)
-        payloads = db.execute(stmt).scalars().all()
-
-        if not payloads:
-            return jsonify({"error": "No payloads found in batch"}), 404
-
-        # Parse each payload using CompassEvent model
-        events = []
-        parse_errors = []
-        for payload in payloads:
-            raw_data = payload.get_payload()
-            try:
-                event = CompassParser.parse(CompassEvent, raw_data)
-                events.append(event.model_dump(mode="json"))
-            except Exception as e:
-                # Log error but continue processing other payloads
-                parse_errors.append({"payload_id": payload.id, "error": str(e)})
-                continue
+        events = db.execute(stmt).scalars().all()
 
         if not events:
             return jsonify({
-                "error": "Failed to parse any event data",
-                "parse_errors": parse_errors
-            }), 500
+                "error": "No events found",
+                "hint": "Run 'poetry run bellweaver compass process' to process raw API data into events"
+            }), 404
 
-        # Build response with batch metadata
+        # Convert Event ORM models to JSON
+        event_list = []
+        for event in events:
+            event_dict = {
+                "id": event.id,
+                "title": event.title,
+                "start": event.start.isoformat(),
+                "end": event.end.isoformat(),
+                "description": event.description,
+                "location": event.location,
+                "all_day": event.all_day,
+                "organizer": event.organizer,
+                "attendees": event.attendees or [],
+                "status": event.status,
+                "created_at": event.created_at.isoformat(),
+                "updated_at": event.updated_at.isoformat(),
+            }
+            event_list.append(event_dict)
+
+        # Build response
         response = {
-            "batch_id": latest_batch.id,
-            "created_at": latest_batch.created_at.isoformat(),
-            "parameters": latest_batch.parameters,
-            "event_count": len(events),
-            "events": events,
+            "event_count": len(event_list),
+            "events": event_list,
         }
-
-        # Include parse errors if any occurred
-        if parse_errors:
-            response["parse_errors"] = parse_errors
 
         return jsonify(response), 200
 

@@ -47,7 +47,16 @@ function Dashboard() {
     );
   }
 
-  const displayEvents = events?.events?.slice(0, 10) || [];
+  // Filter to show only upcoming events (from today forward)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const upcomingEvents = events?.events?.filter(event => {
+    const eventDate = new Date(event.start);
+    return eventDate >= today;
+  }) || [];
+
+  const displayEvents = upcomingEvents.slice(0, 10);
   const userName = user?.user?.user_preferred_name || user?.user?.user_first_name || 'User';
   const userFullName = user?.user?.user_full_name;
 
@@ -75,13 +84,16 @@ function Dashboard() {
         )}
 
         {displayEvents.length === 0 ? (
-          <p className="no-events">No events found</p>
+          <p className="no-events">
+            No upcoming events found.
+            {events?.hint && <span className="hint"> {events.hint}</span>}
+          </p>
         ) : (
           <div className="events-list">
-            {displayEvents.map((event, index) => (
-              <div key={event.activity_id || event.instance_id || index} className="event-card">
+            {displayEvents.map((event) => (
+              <div key={event.id} className="event-card">
                 <div className="event-header">
-                  <h3>{event.long_title_without_time || event.long_title || event.title}</h3>
+                  <h3>{event.title}</h3>
                   {event.all_day ? (
                     <span className="event-badge all-day">All Day</span>
                   ) : (
@@ -112,9 +124,15 @@ function Dashboard() {
                     <p className="event-location">📍 {event.location}</p>
                   )}
 
-                  {event.managers && event.managers.length > 0 && (
+                  {event.status && (
+                    <p className="event-status">
+                      Status: {event.status.replace('Event', '')}
+                    </p>
+                  )}
+
+                  {event.attendees && event.attendees.length > 0 && (
                     <p className="event-attendees">
-                      👥 {event.managers.length} manager{event.managers.length !== 1 ? 's' : ''}
+                      👥 {event.attendees.length} attendee{event.attendees.length !== 1 ? 's' : ''}
                     </p>
                   )}
                 </div>
@@ -123,9 +141,15 @@ function Dashboard() {
           </div>
         )}
 
-        {events?.events?.length > 10 && (
+        {upcomingEvents.length > 10 && (
           <p className="showing-count">
-            Showing 10 of {events.events.length} events
+            Showing 10 of {upcomingEvents.length} upcoming events
+          </p>
+        )}
+
+        {events?.event_count > 0 && (
+          <p className="total-count">
+            Total events in database: {events.event_count}
           </p>
         )}
       </section>

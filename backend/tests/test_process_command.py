@@ -89,6 +89,7 @@ def batch_with_events(db_session, sample_compass_event_payload):
         adapter_id="compass",
         method_name="get_calendar_events",
         batch_id=batch.id,
+        external_id=ApiPayload.generate_external_id(sample_compass_event_payload),
         payload=sample_compass_event_payload,
     )
     db_session.add(payload1)
@@ -97,10 +98,12 @@ def batch_with_events(db_session, sample_compass_event_payload):
     payload2_data = sample_compass_event_payload.copy()
     payload2_data["title"] = "Second Test Event"
     payload2_data["guid"] = "test-guid-456"
+    payload2_data["instanceId"] = "test-instance-456"  # Different instanceId to avoid duplicate external_id
     payload2 = ApiPayload(
         adapter_id="compass",
         method_name="get_calendar_events",
         batch_id=batch.id,
+        external_id=ApiPayload.generate_external_id(payload2_data),
         payload=payload2_data,
     )
     db_session.add(payload2)
@@ -199,37 +202,39 @@ class TestProcessCommand:
         db_session.commit()
         db_session.refresh(old_batch)
 
+        old_payload_data = {
+            "__type": "CalendarTransport:http://jdlf.com.au/ns/data/calendar",
+            "activityId": 1,
+            "activityType": 1,
+            "allDay": False,
+            "attendanceMode": 0,
+            "attendeeUserId": 1,
+            "backgroundColor": "#000000",
+            "calendarId": 1,
+            "description": "Old event",
+            "finish": "2025-01-02T15:00:00",
+            "guid": "old-guid",
+            "instanceId": "old-instance",
+            "isRecurring": False,
+            "lessonPlanConfigured": False,
+            "longTitle": "Old Event",
+            "longTitleWithoutTime": "Old Event",
+            "managerId": 1,
+            "repeatForever": False,
+            "repeatFrequency": 0,
+            "rollMarked": False,
+            "runningStatus": 0,
+            "start": "2025-01-02T14:00:00",
+            "targetStudentId": 1,
+            "teachingDaysOnly": False,
+            "title": "Old Event",
+        }
         old_payload = ApiPayload(
             adapter_id="compass",
             method_name="get_calendar_events",
             batch_id=old_batch.id,
-            payload={
-                "__type": "CalendarTransport:http://jdlf.com.au/ns/data/calendar",
-                "activityId": 1,
-                "activityType": 1,
-                "allDay": False,
-                "attendanceMode": 0,
-                "attendeeUserId": 1,
-                "backgroundColor": "#000000",
-                "calendarId": 1,
-                "description": "Old event",
-                "finish": "2025-01-02T15:00:00",
-                "guid": "old-guid",
-                "instanceId": "old-instance",
-                "isRecurring": False,
-                "lessonPlanConfigured": False,
-                "longTitle": "Old Event",
-                "longTitleWithoutTime": "Old Event",
-                "managerId": 1,
-                "repeatForever": False,
-                "repeatFrequency": 0,
-                "rollMarked": False,
-                "runningStatus": 0,
-                "start": "2025-01-02T14:00:00",
-                "targetStudentId": 1,
-                "teachingDaysOnly": False,
-                "title": "Old Event",
-            },
+            external_id=ApiPayload.generate_external_id(old_payload_data),
+            payload=old_payload_data,
         )
         db_session.add(old_payload)
         db_session.commit()
@@ -244,37 +249,39 @@ class TestProcessCommand:
         db_session.commit()
         db_session.refresh(new_batch)
 
+        new_payload_data = {
+            "__type": "CalendarTransport:http://jdlf.com.au/ns/data/calendar",
+            "activityId": 2,
+            "activityType": 1,
+            "allDay": False,
+            "attendanceMode": 0,
+            "attendeeUserId": 2,
+            "backgroundColor": "#FFFFFF",
+            "calendarId": 2,
+            "description": "New event",
+            "finish": "2025-12-03T15:00:00",
+            "guid": "new-guid",
+            "instanceId": "new-instance",
+            "isRecurring": False,
+            "lessonPlanConfigured": False,
+            "longTitle": "New Event",
+            "longTitleWithoutTime": "New Event",
+            "managerId": 2,
+            "repeatForever": False,
+            "repeatFrequency": 0,
+            "rollMarked": False,
+            "runningStatus": 0,
+            "start": "2025-12-03T14:00:00",
+            "targetStudentId": 2,
+            "teachingDaysOnly": False,
+            "title": "New Event",
+        }
         new_payload = ApiPayload(
             adapter_id="compass",
             method_name="get_calendar_events",
             batch_id=new_batch.id,
-            payload={
-                "__type": "CalendarTransport:http://jdlf.com.au/ns/data/calendar",
-                "activityId": 2,
-                "activityType": 1,
-                "allDay": False,
-                "attendanceMode": 0,
-                "attendeeUserId": 2,
-                "backgroundColor": "#FFFFFF",
-                "calendarId": 2,
-                "description": "New event",
-                "finish": "2025-12-03T15:00:00",
-                "guid": "new-guid",
-                "instanceId": "new-instance",
-                "isRecurring": False,
-                "lessonPlanConfigured": False,
-                "longTitle": "New Event",
-                "longTitleWithoutTime": "New Event",
-                "managerId": 2,
-                "repeatForever": False,
-                "repeatFrequency": 0,
-                "rollMarked": False,
-                "runningStatus": 0,
-                "start": "2025-12-03T14:00:00",
-                "targetStudentId": 2,
-                "teachingDaysOnly": False,
-                "title": "New Event",
-            },
+            external_id=ApiPayload.generate_external_id(new_payload_data),
+            payload=new_payload_data,
         )
         db_session.add(new_payload)
         db_session.commit()
@@ -295,11 +302,13 @@ class TestProcessCommand:
     ):
         """Test that process command handles invalid payloads gracefully."""
         # Add an invalid payload to the batch
+        invalid_payload_data = {"invalid": "data", "missing": "required_fields"}
         invalid_payload = ApiPayload(
             adapter_id="compass",
             method_name="get_calendar_events",
             batch_id=batch_with_events.id,
-            payload={"invalid": "data", "missing": "required_fields"},
+            external_id="invalid-payload-1",
+            payload=invalid_payload_data,
         )
         db_session.add(invalid_payload)
         db_session.commit()

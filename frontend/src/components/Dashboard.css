@@ -112,7 +112,8 @@
 }
 
 .event-location,
-.event-attendees {
+.event-attendees,
+.event-status {
   font-size: 0.85em;
   opacity: 0.7;
 }
@@ -124,11 +125,19 @@
   font-style: italic;
 }
 
-.showing-count {
+.showing-count,
+.total-count {
   text-align: center;
   margin-top: 2rem;
   opacity: 0.6;
   font-size: 0.9em;
+}
+
+.no-events .hint {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.9em;
+  color: #4ecdc4;
 }
 
 .error-hint {

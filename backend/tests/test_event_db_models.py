@@ -43,6 +43,7 @@ class TestEventORM:
             adapter_id="compass",
             method_name="get_events",
             batch_id=batch.id,
+            external_id="test-event-1",
             payload={"title": "Test Event"},
         )
         db_session.add(payload)
@@ -116,6 +117,7 @@ class TestEventORM:
             adapter_id="compass",
             method_name="get_events",
             batch_id=batch.id,
+            external_id="test-event-2",
             payload={},
         )
         db_session.add(payload)
@@ -147,6 +149,7 @@ class TestEventORM:
             adapter_id="compass",
             method_name="get_events",
             batch_id=batch.id,
+            external_id="test-event-3",
             payload={"test": "data"},
         )
         db_session.add(payload)
@@ -178,6 +181,7 @@ class TestEventORM:
             adapter_id="compass",
             method_name="get_events",
             batch_id=batch.id,
+            external_id="test-event-4",
             payload={},
         )
         db_session.add(payload)
@@ -215,12 +219,14 @@ class TestEventORM:
             adapter_id="compass",
             method_name="get_events",
             batch_id=batch.id,
+            external_id="test-event-5",
             payload={},
         )
         payload2 = ApiPayload(
             adapter_id="compass",
             method_name="get_events",
             batch_id=batch.id,
+            external_id="test-event-6",
             payload={},
         )
         db_session.add_all([payload1, payload2])
@@ -265,6 +271,7 @@ class TestEventORM:
             adapter_id="compass",
             method_name="get_events",
             batch_id=batch.id,
+            external_id="test-event-7",
             payload={},
         )
         db_session.add(payload)
