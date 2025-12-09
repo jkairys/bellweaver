@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from bellweaver.models.compass import CompassEvent, CompassUser
+from compass_client import CompassEvent, CompassUser
 
 
 @pytest.fixture

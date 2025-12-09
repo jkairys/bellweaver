@@ -15,7 +15,7 @@ from bellweaver.db.models import (
     Child as DBChild, Organisation as DBOrganisation, 
     ChildOrganisation, CommunicationChannel as DBChannel
 )
-from bellweaver.models.compass import CompassUser, CompassEvent
+from compass_client import CompassUser, CompassEvent, CompassParser, create_client
 from bellweaver.models.family import (
     ChildCreate, ChildUpdate, Child as ChildResponse,
     OrganisationCreate, Organisation as OrganisationResponse,
@@ -23,9 +23,7 @@ from bellweaver.models.family import (
     ChildOrganisationCreate, ChildDetail, OrganisationDetail,
     ChannelCreate, ChannelUpdate, CommunicationChannel as ChannelResponse
 )
-from bellweaver.parsers.compass import CompassParser
 from bellweaver.db.credentials import CredentialManager
-from bellweaver.adapters.compass import CompassClient
 import uuid
 import os
 from datetime import datetime
@@ -831,9 +829,9 @@ def create_channel(org_id: str):
             if not (username and password and base_url):
                 raise ValidationError("Username, password, and base_url required for Compass", "INVALID_CREDENTIALS")
                 
-            # Validate credentials with Compass
+            # Validate credentials with Compass (always use real mode for auth)
             try:
-                client = CompassClient(base_url=base_url, username=username, password=password)
+                client = create_client(base_url=base_url, username=username, password=password, mode="real")
                 client.login()
                 # If login successful, we proceed
             except Exception as e:
@@ -985,9 +983,9 @@ def update_channel(channel_id: str):
             if not (username and password and base_url):
                 raise ValidationError("Username, password, and base_url required for Compass", "INVALID_CREDENTIALS")
                 
-            # Validate credentials with Compass
+            # Validate credentials with Compass (always use real mode for auth)
             try:
-                client = CompassClient(base_url=base_url, username=username, password=password)
+                client = create_client(base_url=base_url, username=username, password=password, mode="real")
                 client.login()
             except Exception as e:
                 raise ValidationError(f"Compass authentication failed: {str(e)}", "AUTH_FAILED")

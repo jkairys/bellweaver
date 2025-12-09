@@ -61,20 +61,20 @@
 
 ### Implementation for User Story 1
 
-- [ ] T023 [P] [US1] Update CompassMockClient in `packages/compass-client/compass_client/mock_client.py` to load from data/mock/ files
-- [ ] T024 [P] [US1] Implement _load_mock_events() method in CompassMockClient to read compass_events.json
-- [ ] T025 [P] [US1] Implement _load_mock_user() method in CompassMockClient to read compass_user.json
-- [ ] T026 [US1] Implement fallback to hardcoded data in CompassMockClient if files missing
-- [ ] T027 [US1] Implement factory create_client() function in `packages/compass-client/compass_client/factory.py` with mode detection
-- [ ] T028 [US1] Add COMPASS_MODE environment variable handling in factory.py (reads from os.getenv)
-- [ ] T029 [US1] Implement configuration precedence in factory: explicit mode > env var > default "real"
-- [ ] T030 [US1] Add validation in factory.py to ensure mode is "real" or "mock"
-- [ ] T031 [US1] Update bellweaver CLI commands in `packages/bellweaver/bellweaver/cli/commands/compass.py` to use create_client()
-- [ ] T032 [US1] Update bellweaver API routes in `packages/bellweaver/bellweaver/api/routes.py` to use create_client()
-- [ ] T033 [US1] Update all bellweaver imports from `bellweaver.adapters.compass` to `compass_client`
-- [ ] T034 [US1] Remove old compass code from `packages/bellweaver/bellweaver/adapters/` (compass.py, compass_mock.py)
-- [ ] T035 [US1] Test local development: Set COMPASS_MODE=mock and start bellweaver API server
-- [ ] T036 [US1] Verify API endpoints return mock data: curl localhost:5000/user and localhost:5000/events
+- [X] T023 [P] [US1] Update CompassMockClient in `packages/compass-client/compass_client/mock_client.py` to load from data/mock/ files
+- [X] T024 [P] [US1] Implement _load_mock_events() method in CompassMockClient to read compass_events.json
+- [X] T025 [P] [US1] Implement _load_mock_user() method in CompassMockClient to read compass_user.json
+- [X] T026 [US1] Implement fallback to hardcoded data in CompassMockClient if files missing
+- [X] T027 [US1] Implement factory create_client() function in `packages/compass-client/compass_client/factory.py` with mode detection
+- [X] T028 [US1] Add COMPASS_MODE environment variable handling in factory.py (reads from os.getenv)
+- [X] T029 [US1] Implement configuration precedence in factory: explicit mode > env var > default "real"
+- [X] T030 [US1] Add validation in factory.py to ensure mode is "real" or "mock"
+- [X] T031 [US1] Update bellweaver CLI commands in `packages/bellweaver/bellweaver/cli/commands/compass.py` to use create_client()
+- [X] T032 [US1] Update bellweaver API routes in `packages/bellweaver/bellweaver/api/routes.py` to use create_client()
+- [X] T033 [US1] Update all bellweaver imports from `bellweaver.adapters.compass` to `compass_client`
+- [X] T034 [US1] Remove old compass code from `packages/bellweaver/bellweaver/adapters/` (compass.py, compass_mock.py)
+- [X] T035 [US1] Test local development: Set COMPASS_MODE=mock and start bellweaver API server
+- [X] T036 [US1] Verify API endpoints return mock data: curl localhost:5000/user and localhost:5000/events
 
 **Checkpoint**: At this point, User Story 1 should be fully functional - developers can run the app locally with mock data
 

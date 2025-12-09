@@ -3,19 +3,16 @@ CLI commands for managing Compass data synchronization.
 """
 
 import os
-import json
 import typer
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 from dotenv import load_dotenv
 from sqlalchemy.dialects.sqlite import insert
 
-from bellweaver.adapters.compass import CompassClient
+from compass_client import create_client, CompassEvent, CompassParser
 from bellweaver.db.database import SessionLocal, init_db
 from bellweaver.db.models import Batch, ApiPayload, Event
-from bellweaver.models.compass import CompassEvent
 from bellweaver.mappers.compass import compass_event_to_event
-from bellweaver.parsers.compass import CompassParser
 
 # Load environment variables from .env file
 load_dotenv()
@@ -123,9 +120,12 @@ def sync_calendar_events(
             typer.echo(f"  Date range: {start_date_str} to {end_date_str}")
             typer.echo(f"  Limit: {limit} events")
             typer.echo("")
-            # Authenticate with Compass
+            
+            # Create client (real or mock based on COMPASS_MODE env var)
+            compass_mode = os.getenv("COMPASS_MODE", "real")
+            typer.echo(f"  Mode: {compass_mode}")
             typer.echo("  Authenticating with Compass...")
-            client = CompassClient(base_url, username, password)
+            client = create_client(base_url, username, password)
             client.login()
             typer.secho("  ✓ Authenticated", fg=typer.colors.GREEN)
             typer.echo("")

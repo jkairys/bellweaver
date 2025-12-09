@@ -5,7 +5,7 @@ from datetime import datetime
 import pytest
 
 from bellweaver.mappers.compass import compass_event_to_event
-from bellweaver.models.compass import CalendarEventLocation, CompassEvent
+from compass_client import CalendarEventLocation, CompassEvent
 from bellweaver.models.event import Event
 
 

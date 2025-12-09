@@ -13,7 +13,7 @@ from typing import List, Dict, Any, Tuple
 
 from dotenv import load_dotenv
 
-from .compass import CompassClient
+from compass_client import create_client
 
 
 def collect_compass_data(
@@ -64,8 +64,8 @@ def collect_compass_data(
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Connect to Compass
-    client = CompassClient(base_url, username, password)
+    # Connect to Compass (always use real mode for data collection)
+    client = create_client(base_url, username, password, mode="real")
 
     try:
         # Authenticate
