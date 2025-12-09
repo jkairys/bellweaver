@@ -148,3 +148,19 @@
     grid-template-columns: 1fr;
   }
 }
+
+.org-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.org-badge {
+  background-color: #e8f0fe;
+  color: #1a73e8;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  border: 1px solid #d2e3fc;
+}

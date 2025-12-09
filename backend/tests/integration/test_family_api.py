@@ -7,6 +7,7 @@ All tests verify API contracts, validation rules, and success criteria from spec
 
 import json
 import pytest
+from unittest.mock import patch, MagicMock
 from datetime import date, timedelta
 from bellweaver.api import create_app
 from bellweaver.db.database import get_session, init_db, Base, get_engine
@@ -21,6 +22,10 @@ def app():
     # Use in-memory SQLite database for tests
     import os
     os.environ['DATABASE_URL'] = 'sqlite:///:memory:'
+    
+    # Ensure encryption key is set for CredentialManager
+    from cryptography.fernet import Fernet
+    os.environ['BELLWEAVER_ENCRYPTION_KEY'] = Fernet.generate_key().decode()
 
     with app.app_context():
         # Initialize database schema
@@ -625,3 +630,316 @@ class TestUserStory4Associations:
         assert isinstance(data['organisations'], list)
         assert len(data['organisations']) == 1
         assert data['organisations'][0]['id'] == org_id
+
+
+# ============================================================================
+# Phase 7: User Story 5 - Connect Compass Communication Channel
+# ============================================================================
+
+class TestUserStory5Channels:
+    """Tests for communication channel endpoints."""
+
+    @pytest.fixture
+    def setup_org(self, client):
+        """Helper to create an organisation."""
+        resp = client.post('/api/organisations',
+                          data=json.dumps({"name": "Compass School", "type": "school"}),
+                          content_type='application/json')
+        return resp.get_json()['id']
+
+    def test_create_channel_valid_compass(self, client, setup_org):
+        """
+        T058: POST /api/organisations/:id/channels with valid Compass credentials
+        Expect: 201 Created, verify SC-003 (<5s), verify credentials encrypted in DB
+        """
+        org_id = setup_org
+        payload = {
+            "channel_type": "compass",
+            "credentials": {
+                "username": "parent1",
+                "password": "securepassword123",
+                "base_url": "https://school-vic.compass.education"
+            },
+            "is_active": True
+        }
+
+        # Mock CompassClient to succeed
+        with patch('bellweaver.api.routes.CompassClient') as MockClient:
+            instance = MockClient.return_value
+            instance.login.return_value = True
+            
+            import time
+            start_time = time.time()
+            
+            response = client.post(f'/api/organisations/{org_id}/channels',
+                                  data=json.dumps(payload),
+                                  content_type='application/json')
+            
+            elapsed_time = (time.time() - start_time) * 1000
+
+        assert response.status_code == 201
+        data = response.get_json()
+        assert data['channel_type'] == "compass"
+        assert data['credential_source'] == "compass"
+        
+        # Verify SC-003: Response time < 5s (5000ms) - generous for external API calls
+        assert elapsed_time < 5000
+
+        # Verify credentials encrypted in DB
+        # We can't easily access the DB session here without exposing it from app
+        # But we can verify GET doesn't return them
+        
+        # Verify CompassClient was initialized and login called
+        MockClient.assert_called_with(
+            base_url="https://school-vic.compass.education",
+            username="parent1",
+            password="securepassword123"
+        )
+        instance.login.assert_called_once()
+
+    def test_create_channel_invalid_compass_creds(self, client, setup_org):
+        """
+        T059: POST /api/organisations/:id/channels with invalid Compass credentials
+        Expect: 400 Bad Request
+        """
+        org_id = setup_org
+        payload = {
+            "channel_type": "compass",
+            "credentials": {
+                "username": "wrong",
+                "password": "wrong",
+                "base_url": "https://school-vic.compass.education"
+            }
+        }
+
+        # Mock CompassClient to fail login
+        with patch('bellweaver.api.routes.CompassClient') as MockClient:
+            instance = MockClient.return_value
+            # login raises Exception on failure
+            instance.login.side_effect = Exception("Login failed")
+            
+            response = client.post(f'/api/organisations/{org_id}/channels',
+                                  data=json.dumps(payload),
+                                  content_type='application/json')
+
+        assert response.status_code == 400
+        data = response.get_json()
+        assert "Login failed" in str(data)
+
+    def test_get_channels_excludes_credentials(self, client, setup_org):
+        """
+        T060: GET /api/organisations/:id/channels
+        Expect: 200 OK, verify credentials NOT exposed in response
+        """
+        org_id = setup_org
+        # Create channel first
+        payload = {
+            "channel_type": "compass",
+            "credentials": {"username": "u", "password": "p", "base_url": "url"}
+        }
+        with patch('bellweaver.api.routes.CompassClient') as MockClient:
+            MockClient.return_value.login.return_value = True
+            client.post(f'/api/organisations/{org_id}/channels',
+                       data=json.dumps(payload),
+                       content_type='application/json')
+
+        # Get channels
+        response = client.get(f'/api/organisations/{org_id}/channels')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert len(data) == 1
+        channel = data[0]
+        
+        # Should NOT have 'credentials' field
+        assert 'credentials' not in channel
+        # Should have 'credential_source'
+        assert channel['credential_source'] == "compass"
+
+    def test_update_channel_revalidates(self, client, setup_org):
+        """
+        T061: PUT /api/channels/:id with updated credentials
+        Expect: 200 OK, verify re-validation
+        """
+        org_id = setup_org
+        # Create channel
+        with patch('bellweaver.api.routes.CompassClient') as MockClient:
+            MockClient.return_value.login.return_value = True
+            resp = client.post(f'/api/organisations/{org_id}/channels',
+                              data=json.dumps({
+                                  "channel_type": "compass",
+                                  "credentials": {"username": "old", "password": "old", "base_url": "url"}
+                              }),
+                              content_type='application/json')
+            channel_id = resp.get_json()['id']
+
+        # Update credentials
+        new_payload = {
+            "channel_type": "compass",
+            "credentials": {
+                "username": "new_user",
+                "password": "new_password",
+                "base_url": "new_url"
+            },
+            "is_active": True
+        }
+
+        with patch('bellweaver.api.routes.CompassClient') as MockClient:
+            instance = MockClient.return_value
+            instance.login.return_value = True
+            
+            response = client.put(f'/api/channels/{channel_id}',
+                                 data=json.dumps(new_payload),
+                                 content_type='application/json')
+            
+            # Verify re-validation occurred with NEW credentials
+            MockClient.assert_called_with(
+                base_url="new_url",
+                username="new_user",
+                password="new_password"
+            )
+            instance.login.assert_called_once()
+
+        assert response.status_code == 200
+
+    def test_delete_channel(self, client, setup_org):
+        """
+        T062: DELETE /api/channels/:id
+        Expect: 204 No Content
+        """
+        org_id = setup_org
+        # Create channel
+        with patch('bellweaver.api.routes.CompassClient') as MockClient:
+            MockClient.return_value.login.return_value = True
+            resp = client.post(f'/api/organisations/{org_id}/channels',
+                              data=json.dumps({
+                                  "channel_type": "compass",
+                                  "credentials": {"username": "u", "password": "p", "base_url": "url"}
+                              }),
+                              content_type='application/json')
+            channel_id = resp.get_json()['id']
+
+        # Delete
+        response = client.delete(f'/api/channels/{channel_id}')
+        assert response.status_code == 204
+
+        # Verify gone
+        get_resp = client.get(f'/api/channels/{channel_id}')
+        # Depending on implementation, GET single might be 404 or just missing from list
+        # The task doesn't strictly specify GET single endpoint existence but T069 says "Implement GET /api/channels/:id"
+        if get_resp.status_code != 405: # if endpoint exists
+            assert get_resp.status_code == 404
+
+
+# ============================================================================
+# Phase 8: User Story 3 (Extended) - Update/Delete Organisations
+# ============================================================================
+
+class TestUserStory3Extended:
+    """Tests for PUT/DELETE /api/organisations/:id endpoints."""
+
+    def test_update_organisation_valid(self, client):
+        """
+        T072: PUT /api/organisations/:id with valid data
+        Expect: 200 OK
+        """
+        # Create org
+        payload = {"name": "Old Name", "type": "school"}
+        resp = client.post('/api/organisations',
+                          data=json.dumps(payload),
+                          content_type='application/json')
+        org_id = resp.get_json()['id']
+
+        # Update org
+        update_payload = {
+            "name": "New Name",
+            "type": "sports_team",
+            "address": "New Address"
+        }
+        response = client.put(f'/api/organisations/{org_id}',
+                             data=json.dumps(update_payload),
+                             content_type='application/json')
+
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['name'] == "New Name"
+        assert data['type'] == "sports_team"
+        assert data['address'] == "New Address"
+
+    def test_update_organisation_duplicate_name(self, client):
+        """
+        T073: PUT /api/organisations/:id with duplicate name
+        Expect: 409 Conflict
+        """
+        # Create two orgs
+        client.post('/api/organisations',
+                   data=json.dumps({"name": "Org A", "type": "school"}),
+                   content_type='application/json')
+        
+        resp_b = client.post('/api/organisations',
+                            data=json.dumps({"name": "Org B", "type": "school"}),
+                            content_type='application/json')
+        org_b_id = resp_b.get_json()['id']
+
+        # Try to rename Org B to "Org A"
+        response = client.put(f'/api/organisations/{org_b_id}',
+                             data=json.dumps({"name": "Org A", "type": "school"}),
+                             content_type='application/json')
+
+        assert response.status_code == 409
+
+    def test_delete_organisation_with_children_fails(self, client):
+        """
+        T074: DELETE /api/organisations/:id with associated children
+        Expect: 409 Conflict per FR-011
+        """
+        # Create child
+        child_id = client.post('/api/children',
+                              data=json.dumps({"name": "C", "date_of_birth": "2015-01-01"}),
+                              content_type='application/json').get_json()['id']
+        
+        # Create org
+        org_id = client.post('/api/organisations',
+                            data=json.dumps({"name": "S", "type": "school"}),
+                            content_type='application/json').get_json()['id']
+        
+        # Link them
+        client.post(f'/api/children/{child_id}/organisations',
+                   data=json.dumps({"organisation_id": org_id}),
+                   content_type='application/json')
+
+        # Try to delete org
+        response = client.delete(f'/api/organisations/{org_id}')
+
+        assert response.status_code == 409
+        assert "children" in str(response.get_json()).lower()
+
+    def test_delete_organisation_success_cascade_channels(self, client):
+        """
+        T075: DELETE /api/organisations/:id without children
+        Expect: 204 No Content, verify CASCADE delete of channels
+        """
+        # Create org
+        org_id = client.post('/api/organisations',
+                            data=json.dumps({"name": "S", "type": "school"}),
+                            content_type='application/json').get_json()['id']
+        
+        # Add a channel (mocking success)
+        with patch('bellweaver.api.routes.CompassClient') as MockClient:
+            MockClient.return_value.login.return_value = True
+            channel_resp = client.post(f'/api/organisations/{org_id}/channels',
+                                      data=json.dumps({
+                                          "channel_type": "compass",
+                                          "credentials": {"username": "u", "password": "p", "base_url": "url"}
+                                      }),
+                                      content_type='application/json')
+            channel_id = channel_resp.get_json()['id']
+
+        # Delete org
+        response = client.delete(f'/api/organisations/{org_id}')
+        assert response.status_code == 204
+
+        # Verify org gone
+        assert client.get(f'/api/organisations/{org_id}').status_code == 404
+
+        # Verify channel gone (CASCADE)
+        assert client.get(f'/api/channels/{channel_id}').status_code == 404

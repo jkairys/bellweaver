@@ -71,6 +71,17 @@ function ChildList({ children, onEdit, onDelete, loading }) {
                   <span>{child.interests}</span>
                 </div>
               )}
+
+              {child.organisations && child.organisations.length > 0 && (
+                <div className="child-info">
+                  <label>Organisations:</label>
+                  <div className="org-badges">
+                    {child.organisations.map(org => (
+                      <span key={org.id} className="org-badge">{org.name}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="child-card-actions">

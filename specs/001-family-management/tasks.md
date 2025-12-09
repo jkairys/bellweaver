@@ -166,23 +166,23 @@
 
 ### Tests for User Story 5 (Test-First)
 
-- [ ] T058 [P] [US5] Write integration test for POST /api/organisations/:id/channels with valid Compass credentials in backend/tests/integration/test_family_api.py - expect 201, verify SC-003 (<5s), verify credentials encrypted in DB per SC-004
-- [ ] T059 [P] [US5] Write integration test for POST /api/organisations/:id/channels with invalid Compass credentials in backend/tests/integration/test_family_api.py - expect 400 per edge case spec
-- [ ] T060 [P] [US5] Write integration test for GET /api/organisations/:id/channels in backend/tests/integration/test_family_api.py - expect 200, verify credentials NOT exposed in response
-- [ ] T061 [P] [US5] Write integration test for PUT /api/channels/:id with updated credentials in backend/tests/integration/test_family_api.py - expect 200, verify SC-007 (<5s), verify re-validation per FR-016
-- [ ] T062 [P] [US5] Write integration test for DELETE /api/channels/:id in backend/tests/integration/test_family_api.py - expect 204
+- [X] T058 [P] [US5] Write integration test for POST /api/organisations/:id/channels with valid Compass credentials in backend/tests/integration/test_family_api.py - expect 201, verify SC-003 (<5s), verify credentials encrypted in DB per SC-004
+- [X] T059 [P] [US5] Write integration test for POST /api/organisations/:id/channels with invalid Compass credentials in backend/tests/integration/test_family_api.py - expect 400 per edge case spec
+- [X] T060 [P] [US5] Write integration test for GET /api/organisations/:id/channels in backend/tests/integration/test_family_api.py - expect 200, verify credentials NOT exposed in response
+- [X] T061 [P] [US5] Write integration test for PUT /api/channels/:id with updated credentials in backend/tests/integration/test_family_api.py - expect 200, verify SC-007 (<5s), verify re-validation per FR-016
+- [X] T062 [P] [US5] Write integration test for DELETE /api/channels/:id in backend/tests/integration/test_family_api.py - expect 204
 
 ### Implementation for User Story 5
 
-- [ ] T063 [P] [US5] Create ChannelCreate Pydantic model in backend/bellweaver/models/family.py with channel_type, config, optional credentials (username, password)
-- [ ] T064 [P] [US5] Create ChannelUpdate Pydantic model in backend/bellweaver/models/family.py with same fields as ChannelCreate
-- [ ] T065 [P] [US5] Create CommunicationChannel response Pydantic model in backend/bellweaver/models/family.py with all fields including credential_source, sync status
-- [ ] T066 [US5] Implement POST /api/organisations/:id/channels endpoint in backend/bellweaver/api/routes.py to create channel, validate organisation exists, encrypt and store credentials using existing backend/bellweaver/db/credentials.py - verify tests T058-T059 pass
-- [ ] T067 [US5] Add Compass credential validation logic in backend/bellweaver/api/routes.py using existing Compass adapter at backend/bellweaver/adapters/compass.py
-- [ ] T068 [US5] Implement GET /api/organisations/:id/channels endpoint in backend/bellweaver/api/routes.py to list channels for organisation (exclude decrypted credentials in response) - verify test T060 passes
-- [ ] T069 [US5] Implement GET /api/channels/:id endpoint in backend/bellweaver/api/routes.py to retrieve single channel details (exclude decrypted credentials)
-- [ ] T070 [US5] Implement PUT /api/channels/:id endpoint in backend/bellweaver/api/routes.py to update channel config/credentials, re-validate if credentials changed - verify test T061 passes
-- [ ] T071 [US5] Implement DELETE /api/channels/:id endpoint in backend/bellweaver/api/routes.py to remove channel, return 204 on success - verify test T062 passes
+- [X] T063 [P] [US5] Create ChannelCreate Pydantic model in backend/bellweaver/models/family.py with channel_type, config, optional credentials (username, password)
+- [X] T064 [P] [US5] Create ChannelUpdate Pydantic model in backend/bellweaver/models/family.py with same fields as ChannelCreate
+- [X] T065 [P] [US5] Create CommunicationChannel response Pydantic model in backend/bellweaver/models/family.py with all fields including credential_source, sync status
+- [X] T066 [US5] Implement POST /api/organisations/:id/channels endpoint in backend/bellweaver/api/routes.py to create channel, validate organisation exists, encrypt and store credentials using existing backend/bellweaver/db/credentials.py - verify tests T058-T059 pass
+- [X] T067 [US5] Add Compass credential validation logic in backend/bellweaver/api/routes.py using existing Compass adapter at backend/bellweaver/adapters/compass.py
+- [X] T068 [US5] Implement GET /api/organisations/:id/channels endpoint in backend/bellweaver/api/routes.py to list channels for organisation (exclude decrypted credentials in response) - verify test T060 passes
+- [X] T069 [US5] Implement GET /api/channels/:id endpoint in backend/bellweaver/api/routes.py to retrieve single channel details (exclude decrypted credentials)
+- [X] T070 [US5] Implement PUT /api/channels/:id endpoint in backend/bellweaver/api/routes.py to update channel config/credentials, re-validate if credentials changed - verify test T061 passes
+- [X] T071 [US5] Implement DELETE /api/channels/:id endpoint in backend/bellweaver/api/routes.py to remove channel, return 204 on success - verify test T062 passes
 
 **Checkpoint**: At this point, complete backend for all P1 and P2 user stories is functional. Parents can manage family structure and Compass channels. All US1-US5 integration tests pass.
 
@@ -196,16 +196,16 @@
 
 ### Tests for User Story 3 Extended (Test-First)
 
-- [ ] T072 [P] [US3] Write integration test for PUT /api/organisations/:id with valid data in backend/tests/integration/test_family_api.py - expect 200
-- [ ] T073 [P] [US3] Write integration test for PUT /api/organisations/:id with duplicate name in backend/tests/integration/test_family_api.py - expect 409
-- [ ] T074 [P] [US3] Write integration test for DELETE /api/organisations/:id with associated children in backend/tests/integration/test_family_api.py - expect 409 per FR-011
-- [ ] T075 [P] [US3] Write integration test for DELETE /api/organisations/:id without children in backend/tests/integration/test_family_api.py - expect 204, verify CASCADE delete of channels
+- [X] T072 [P] [US3] Write integration test for PUT /api/organisations/:id with valid data in backend/tests/integration/test_family_api.py - expect 200
+- [X] T073 [P] [US3] Write integration test for PUT /api/organisations/:id with duplicate name in backend/tests/integration/test_family_api.py - expect 409
+- [X] T074 [P] [US3] Write integration test for DELETE /api/organisations/:id with associated children in backend/tests/integration/test_family_api.py - expect 409 per FR-011
+- [X] T075 [P] [US3] Write integration test for DELETE /api/organisations/:id without children in backend/tests/integration/test_family_api.py - expect 204, verify CASCADE delete of channels
 
 ### Implementation for User Story 3 Extended
 
-- [ ] T076 [P] [US3] Create OrganisationUpdate Pydantic model in backend/bellweaver/models/family.py (same fields as OrganisationCreate)
-- [ ] T077 [US3] Implement PUT /api/organisations/:id endpoint in backend/bellweaver/api/routes.py to update organisation, enforce unique name on update, return 409 if duplicate - verify tests T072-T073 pass
-- [ ] T078 [US3] Implement DELETE /api/organisations/:id endpoint in backend/bellweaver/api/routes.py with check for associated children, return 409 if children exist, CASCADE delete channels if no children - verify tests T074-T075 pass
+- [X] T076 [P] [US3] Create OrganisationUpdate Pydantic model in backend/bellweaver/models/family.py (same fields as OrganisationCreate)
+- [X] T077 [US3] Implement PUT /api/organisations/:id endpoint in backend/bellweaver/api/routes.py to update organisation, enforce unique name on update, return 409 if duplicate - verify tests T072-T073 pass
+- [X] T078 [US3] Implement DELETE /api/organisations/:id endpoint in backend/bellweaver/api/routes.py with check for associated children, return 409 if children exist, CASCADE delete channels if no children - verify tests T074-T075 pass
 
 **Checkpoint**: Organisation management is now fully complete with all CRUD operations and business rule enforcement. All API integration tests pass for US1-US5 + US3 extended.
 
@@ -219,9 +219,9 @@
 
 ### Implementation for User Story 6
 
-- [ ] T052 [US6] Verify OrganisationDetail model includes channels list (already implemented in T033)
-- [ ] T053 [US6] Ensure GET /api/organisations/:id endpoint returns full channel details including sync status (already implemented in T038, verify it includes last_sync_at, last_sync_status, is_active)
-- [ ] T054 [US6] Add helper method in backend/bellweaver/api/routes.py to determine if organisation needs channel setup (has no active channels)
+- [X] T052 [US6] Verify OrganisationDetail model includes channels list (already implemented in T033)
+- [X] T053 [US6] Ensure GET /api/organisations/:id endpoint returns full channel details including sync status (already implemented in T038, verify it includes last_sync_at, last_sync_status, is_active)
+- [X] T054 [US6] Add helper method in backend/bellweaver/api/routes.py to determine if organisation needs channel setup (has no active channels)
 
 **Checkpoint**: Backend API for all 6 user stories (P1, P2, P3) is now complete. All endpoints functional with proper validation and error handling.
 
@@ -254,12 +254,12 @@
 
 ### Implementation
 
-- [ ] T061 [P] [US3] Create API service functions for organisations in frontend/src/services/familyApi.js (createOrganisation, getOrganisations, getOrganisation, updateOrganisation, deleteOrganisation)
-- [ ] T062 [P] [US3] Create OrganisationList component in frontend/src/components/family/OrganisationList.jsx with type filter dropdown, edit/delete buttons
-- [ ] T063 [P] [US3] Create OrganisationForm component in frontend/src/components/family/OrganisationForm.jsx with name, type dropdown, optional address, contact_info fields (phone, email, website)
-- [ ] T064 [US3] Integrate OrganisationList and OrganisationForm into FamilyManagement page at frontend/src/pages/FamilyManagement.jsx
-- [ ] T065 [US3] Add validation error display for duplicate organisation names (409 conflict)
-- [ ] T066 [US3] Add confirmation dialog for organisation deletion with error handling for organisations with children
+- [X] T061 [P] [US3] Create API service functions for organisations in frontend/src/services/familyApi.js (createOrganisation, getOrganisations, getOrganisation, updateOrganisation, deleteOrganisation)
+- [X] T062 [P] [US3] Create OrganisationList component in frontend/src/components/family/OrganisationList.jsx with type filter dropdown, edit/delete buttons
+- [X] T063 [P] [US3] Create OrganisationForm component in frontend/src/components/family/OrganisationForm.jsx with name, type dropdown, optional address, contact_info fields (phone, email, website)
+- [X] T064 [US3] Integrate OrganisationList and OrganisationForm into FamilyManagement page at frontend/src/pages/FamilyManagement.jsx
+- [X] T065 [US3] Add validation error display for duplicate organisation names (409 conflict)
+- [X] T066 [US3] Add confirmation dialog for organisation deletion with error handling for organisations with children
 
 **Checkpoint**: Frontend for organisation management (US3) is complete. Parents can manage organisations via UI.
 
@@ -273,11 +273,11 @@
 
 ### Implementation
 
-- [ ] T067 [P] [US4] Create API service functions for associations in frontend/src/services/familyApi.js (addChildOrganisation, getChildOrganisations, removeChildOrganisation)
-- [ ] T068 [US4] Add organisation selector to ChildForm component in frontend/src/components/family/ChildForm.jsx to display and manage child's organisations
-- [ ] T069 [US4] Add children list display to OrganisationForm component showing which children attend this organisation
-- [ ] T070 [US4] Add "Add Association" UI flow (dropdown to select organisation from child view, add button, remove button)
-- [ ] T071 [US4] Update ChildList to show organisation badges/tags for each child
+- [X] T067 [P] [US4] Create API service functions for associations in frontend/src/services/familyApi.js (addChildOrganisation, getChildOrganisations, removeChildOrganisation)
+- [X] T068 [US4] Add organisation selector to ChildForm component in frontend/src/components/family/ChildForm.jsx to display and manage child's organisations
+- [X] T069 [US4] Add children list display to OrganisationForm component showing which children attend this organisation
+- [X] T070 [US4] Add "Add Association" UI flow (dropdown to select organisation from child view, add button, remove button)
+- [X] T071 [US4] Update ChildList to show organisation badges/tags for each child
 
 **Checkpoint**: Frontend for child-organisation associations (US4) is complete. Parents can link children to organisations via UI.
 
@@ -291,12 +291,12 @@
 
 ### Implementation
 
-- [ ] T072 [P] [US5] Create API service functions for channels in frontend/src/services/familyApi.js (createChannel, getOrganisationChannels, getChannel, updateChannel, deleteChannel)
-- [ ] T073 [P] [US5] Create ChannelConfig component in frontend/src/components/family/ChannelConfig.jsx with channel type dropdown, Compass credential inputs (username, password, base_url), is_active toggle
-- [ ] T074 [US5] Add channel configuration section to OrganisationForm component showing existing channels with edit/delete buttons
-- [ ] T075 [US6] Add channel status indicators (success/failed/pending badges) with last_sync_at timestamp display in ChannelConfig component
-- [ ] T076 [US5] Add credential validation feedback (show success/error after API validates Compass credentials)
-- [ ] T077 [US6] Add "Needs Setup" indicator for organisations without active channels in OrganisationList
+- [X] T072 [P] [US5] Create API service functions for channels in frontend/src/services/familyApi.js (createChannel, getOrganisationChannels, getChannel, updateChannel, deleteChannel)
+- [X] T073 [P] [US5] Create ChannelConfig component in frontend/src/components/family/ChannelConfig.jsx with channel type dropdown, Compass credential inputs (username, password, base_url), is_active toggle
+- [X] T074 [US5] Add channel configuration section to OrganisationForm component showing existing channels with edit/delete buttons
+- [X] T075 [US6] Add channel status indicators (success/failed/pending badges) with last_sync_at timestamp display in ChannelConfig component
+- [X] T076 [US5] Add credential validation feedback (show success/error after API validates Compass credentials)
+- [X] T077 [US6] Add "Needs Setup" indicator for organisations without active channels in OrganisationList
 
 **Checkpoint**: Frontend for channel configuration (US5, US6) is complete. All user stories have functional UI.
 

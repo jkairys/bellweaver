@@ -10,15 +10,24 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from bellweaver.db.database import get_db
-from bellweaver.db.models import ApiPayload, Batch, Event, Child as DBChild, Organisation as DBOrganisation, ChildOrganisation
+from bellweaver.db.models import (
+    ApiPayload, Batch, Event, 
+    Child as DBChild, Organisation as DBOrganisation, 
+    ChildOrganisation, CommunicationChannel as DBChannel
+)
 from bellweaver.models.compass import CompassUser, CompassEvent
 from bellweaver.models.family import (
     ChildCreate, ChildUpdate, Child as ChildResponse,
     OrganisationCreate, Organisation as OrganisationResponse,
-    ChildOrganisationCreate, ChildDetail, OrganisationDetail
+    OrganisationUpdate,
+    ChildOrganisationCreate, ChildDetail, OrganisationDetail,
+    ChannelCreate, ChannelUpdate, CommunicationChannel as ChannelResponse
 )
 from bellweaver.parsers.compass import CompassParser
+from bellweaver.db.credentials import CredentialManager
+from bellweaver.adapters.compass import CompassClient
 import uuid
+import os
 from datetime import datetime
 
 # Create blueprint for user-related routes
@@ -309,7 +318,7 @@ def list_children():
         stmt = select(DBChild).order_by(DBChild.created_at.asc())
         children = db.execute(stmt).scalars().all()
 
-        response = [ChildResponse.model_validate(child).model_dump(mode="json") for child in children]
+        response = [ChildDetail.model_validate(child).model_dump(mode="json") for child in children]
         return jsonify(response), 200
 
     except Exception as e:
@@ -515,10 +524,111 @@ def list_organisations():
 
         orgs = db.execute(stmt).scalars().all()
 
-        response = [OrganisationResponse.model_validate(org).model_dump(mode="json") for org in orgs]
+        response = [OrganisationDetail.model_validate(org).model_dump(mode="json") for org in orgs]
         return jsonify(response), 200
 
     except Exception as e:
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+    finally:
+        db.close()
+
+
+@family_bp.route("/organisations/<org_id>", methods=["PUT"])
+def update_organisation(org_id: str):
+    """
+    Update an organisation.
+
+    Args:
+        org_id: UUID of the organisation
+
+    Request body should match OrganisationUpdate schema.
+
+    Returns:
+        200: Organisation updated successfully
+        400: Validation error
+        404: Organisation not found
+        409: Duplicate name
+    """
+    from flask import request
+    db: Session = next(get_db())
+    try:
+        stmt = select(DBOrganisation).where(DBOrganisation.id == org_id)
+        org = db.execute(stmt).scalar_one_or_none()
+
+        if not org:
+            return jsonify({"error": "Organisation not found"}), 404
+
+        data = request.get_json()
+        if not data:
+            raise ValidationError("Request body is required", "MISSING_BODY")
+
+        try:
+            update_data = OrganisationUpdate(**data)
+        except Exception as e:
+            raise ValidationError(str(e), "VALIDATION_ERROR")
+
+        org.name = update_data.name
+        org.type = update_data.type.value
+        org.address = update_data.address
+        org.contact_info = update_data.contact_info
+        org.updated_at = datetime.utcnow()
+
+        db.commit()
+        db.refresh(org)
+
+        response = OrganisationResponse.model_validate(org)
+        return jsonify(response.model_dump(mode="json")), 200
+
+    except ValidationError:
+        raise
+    except IntegrityError:
+        db.rollback()
+        raise ConflictError(f"Organisation with name '{update_data.name}' already exists", "DUPLICATE_NAME")
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+    finally:
+        db.close()
+
+
+@family_bp.route("/organisations/<org_id>", methods=["DELETE"])
+def delete_organisation(org_id: str):
+    """
+    Delete an organisation.
+
+    Prevents deletion if children are associated (FR-011).
+    Cascades to delete communication channels.
+
+    Args:
+        org_id: UUID of the organisation
+
+    Returns:
+        204: Organisation deleted successfully
+        404: Organisation not found
+        409: Organisation has associated children
+    """
+    db: Session = next(get_db())
+    try:
+        stmt = select(DBOrganisation).where(DBOrganisation.id == org_id)
+        org = db.execute(stmt).scalar_one_or_none()
+
+        if not org:
+            return jsonify({"error": "Organisation not found"}), 404
+
+        # Check for associated children
+        # Note: We can check the relationship directly
+        if org.children:
+             raise ConflictError("Cannot delete organisation with associated children. Remove associations first.", "CHILDREN_EXIST")
+
+        db.delete(org)
+        db.commit()
+
+        return "", 204
+
+    except ConflictError:
+        raise
+    except Exception as e:
+        db.rollback()
         return jsonify({"error": f"Internal server error: {str(e)}"}), 500
     finally:
         db.close()
@@ -663,6 +773,285 @@ def delete_child_organisation(child_id: str, org_id: str):
         db.close()
 
 
+@family_bp.route("/organisations/<org_id>/channels", methods=["POST"])
+def create_channel(org_id: str):
+    """
+    Configure a communication channel for an organisation.
+    
+    Validates credentials with external provider if provided.
+    Encrypts and stores credentials securely.
+    
+    Args:
+        org_id: UUID of the organisation
+        
+    Request body should match ChannelCreate schema.
+    
+    Returns:
+        201: Channel created
+        400: Validation error (including credential validation failure)
+        404: Organisation not found
+    """
+    from flask import request
+    db: Session = next(get_db())
+    try:
+        # Check org exists
+        stmt = select(DBOrganisation).where(DBOrganisation.id == org_id)
+        org = db.execute(stmt).scalar_one_or_none()
+        if not org:
+            return jsonify({"error": "Organisation not found"}), 404
+            
+        data = request.get_json()
+        if not data:
+            raise ValidationError("Request body is required", "MISSING_BODY")
+            
+        try:
+            channel_data = ChannelCreate(**data)
+        except Exception as e:
+            raise ValidationError(str(e), "VALIDATION_ERROR")
+            
+        # Handle credentials if provided
+        credential_source = None
+        if channel_data.channel_type == "compass" and channel_data.credentials:
+            creds = channel_data.credentials
+            username = creds.get("username")
+            password = creds.get("password")
+            base_url = creds.get("base_url")
+            
+            if not (username and password and base_url):
+                raise ValidationError("Username, password, and base_url required for Compass", "INVALID_CREDENTIALS")
+                
+            # Validate credentials with Compass
+            try:
+                client = CompassClient(base_url=base_url, username=username, password=password)
+                client.login()
+                # If login successful, we proceed
+            except Exception as e:
+                raise ValidationError(f"Compass authentication failed: {str(e)}", "AUTH_FAILED")
+                
+            # Save encrypted credentials
+            # Note: For MVP we use "compass" as the source key.
+            # Ideally we'd support multiple compass accounts (e.g. compass_orgId)
+            # but current CredentialManager is singleton-ish for compass.
+            # We'll use "compass" for now as per spec/tests.
+            cred_manager = CredentialManager(db)
+            cred_manager.save_compass_credentials(username, password)
+            credential_source = "compass"
+            
+            # Update config with base_url as it's not part of credentials
+            if not channel_data.config:
+                channel_data.config = {}
+            channel_data.config["base_url"] = base_url
+
+        # Create Channel
+        channel = DBChannel(
+            id=str(uuid.uuid4()),
+            organisation_id=org_id,
+            channel_type=channel_data.channel_type.value,
+            credential_source=credential_source,
+            config=channel_data.config,
+            is_active=channel_data.is_active,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
+        )
+        
+        db.add(channel)
+        db.commit()
+        db.refresh(channel)
+        
+        response = ChannelResponse.model_validate(channel)
+        return jsonify(response.model_dump(mode="json")), 201
+        
+    except ValidationError:
+        raise
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+    finally:
+        db.close()
+
+
+@family_bp.route("/organisations/<org_id>/channels", methods=["GET"])
+def list_org_channels(org_id: str):
+    """
+    List channels for an organisation.
+    
+    Args:
+        org_id: UUID of the organisation
+        
+    Returns:
+        200: List of channels
+        404: Organisation not found
+    """
+    db: Session = next(get_db())
+    try:
+        # Check org exists
+        stmt = select(DBOrganisation).where(DBOrganisation.id == org_id)
+        org = db.execute(stmt).scalar_one_or_none()
+        if not org:
+            return jsonify({"error": "Organisation not found"}), 404
+            
+        # Get channels via relationship
+        response = [ChannelResponse.model_validate(ch).model_dump(mode="json") for ch in org.channels]
+        return jsonify(response), 200
+        
+    except Exception as e:
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+    finally:
+        db.close()
+
+
+@family_bp.route("/channels/<channel_id>", methods=["GET"])
+def get_channel(channel_id: str):
+    """
+    Get channel details.
+    
+    Args:
+        channel_id: UUID of the channel
+        
+    Returns:
+        200: Channel details
+        404: Channel not found
+    """
+    db: Session = next(get_db())
+    try:
+        stmt = select(DBChannel).where(DBChannel.id == channel_id)
+        channel = db.execute(stmt).scalar_one_or_none()
+        
+        if not channel:
+            return jsonify({"error": "Channel not found"}), 404
+            
+        response = ChannelResponse.model_validate(channel)
+        return jsonify(response.model_dump(mode="json")), 200
+        
+    except Exception as e:
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+    finally:
+        db.close()
+
+
+@family_bp.route("/channels/<channel_id>", methods=["PUT"])
+def update_channel(channel_id: str):
+    """
+    Update channel configuration/credentials.
+    
+    Re-validates credentials if provided.
+    
+    Args:
+        channel_id: UUID of the channel
+        
+    Request body should match ChannelUpdate schema.
+    
+    Returns:
+        200: Channel updated
+        400: Validation error
+        404: Channel not found
+    """
+    from flask import request
+    db: Session = next(get_db())
+    try:
+        stmt = select(DBChannel).where(DBChannel.id == channel_id)
+        channel = db.execute(stmt).scalar_one_or_none()
+        
+        if not channel:
+            return jsonify({"error": "Channel not found"}), 404
+            
+        data = request.get_json()
+        if not data:
+            raise ValidationError("Request body is required", "MISSING_BODY")
+            
+        try:
+            update_data = ChannelUpdate(**data)
+        except Exception as e:
+            raise ValidationError(str(e), "VALIDATION_ERROR")
+            
+        # Handle credentials if provided
+        if update_data.channel_type == "compass" and update_data.credentials:
+            creds = update_data.credentials
+            username = creds.get("username")
+            password = creds.get("password")
+            base_url = creds.get("base_url")
+            
+            if not (username and password and base_url):
+                raise ValidationError("Username, password, and base_url required for Compass", "INVALID_CREDENTIALS")
+                
+            # Validate credentials with Compass
+            try:
+                client = CompassClient(base_url=base_url, username=username, password=password)
+                client.login()
+            except Exception as e:
+                raise ValidationError(f"Compass authentication failed: {str(e)}", "AUTH_FAILED")
+                
+            # Update encrypted credentials
+            cred_manager = CredentialManager(db)
+            cred_manager.save_compass_credentials(username, password)
+            
+            # Update config with base_url
+            if not update_data.config:
+                update_data.config = {}
+            update_data.config["base_url"] = base_url
+            
+            # Ensure association
+            channel.credential_source = "compass"
+            
+        # Update other fields
+        channel.channel_type = update_data.channel_type.value
+        if update_data.config:
+            # Merge or replace config? Replace is safer for now.
+            # But preserve base_url if we just set it above
+            current_config = channel.config or {}
+            # If we set base_url above, it's in update_data.config already
+            channel.config = update_data.config
+            
+        channel.is_active = update_data.is_active
+        channel.updated_at = datetime.utcnow()
+        
+        db.commit()
+        db.refresh(channel)
+        
+        response = ChannelResponse.model_validate(channel)
+        return jsonify(response.model_dump(mode="json")), 200
+        
+    except ValidationError:
+        raise
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+    finally:
+        db.close()
+
+
+@family_bp.route("/channels/<channel_id>", methods=["DELETE"])
+def delete_channel(channel_id: str):
+    """
+    Delete a communication channel.
+    
+    Args:
+        channel_id: UUID of the channel
+        
+    Returns:
+        204: Channel deleted
+        404: Channel not found
+    """
+    db: Session = next(get_db())
+    try:
+        stmt = select(DBChannel).where(DBChannel.id == channel_id)
+        channel = db.execute(stmt).scalar_one_or_none()
+        
+        if not channel:
+            return jsonify({"error": "Channel not found"}), 404
+            
+        db.delete(channel)
+        db.commit()
+        
+        return "", 204
+        
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+    finally:
+        db.close()
+
+
 # ==================== ERROR HANDLERS ====================
 
 class ValidationError(Exception):
@@ -713,3 +1102,16 @@ def register_routes(app: Flask) -> None:
     app.register_blueprint(user_bp)
     app.register_blueprint(events_bp)
     app.register_blueprint(family_bp)
+
+
+def _organisation_needs_setup(org: DBOrganisation) -> bool:
+    """
+    Determine if an organisation needs channel setup.
+
+    Returns True if the organisation has no active communication channels.
+    """
+    if not org.channels:
+        return True
+
+    # Check if any channel is active
+    return not any(channel.is_active for channel in org.channels)

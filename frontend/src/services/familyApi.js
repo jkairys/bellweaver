@@ -99,7 +99,7 @@ export async function deleteChild(childId) {
   return;
 }
 
-// ==================== ORGANISATION API FUNCTIONS (Future) ====================
+// ==================== ORGANISATION API FUNCTIONS ====================
 
 /**
  * Create a new organisation.
@@ -179,7 +179,7 @@ export async function deleteOrganisation(orgId) {
   return;
 }
 
-// ==================== ASSOCIATION API FUNCTIONS (Future) ====================
+// ==================== ASSOCIATION API FUNCTIONS ====================
 
 /**
  * Get all organisations for a child.
@@ -217,6 +217,83 @@ export async function addChildOrganisation(childId, organisationId) {
  */
 export async function removeChildOrganisation(childId, organisationId) {
   const response = await fetch(`${API_BASE_URL}/children/${childId}/organisations/${organisationId}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    const message = data.message || data.error || `HTTP ${response.status}: ${response.statusText}`;
+    throw new Error(message);
+  }
+
+  return;
+}
+
+// ==================== CHANNEL API FUNCTIONS ====================
+
+/**
+ * Get all channels for an organisation.
+ * @param {string} orgId - Organisation UUID
+ * @returns {Promise<Array>} Array of channel objects
+ */
+export async function getOrganisationChannels(orgId) {
+  const response = await fetch(`${API_BASE_URL}/organisations/${orgId}/channels`);
+  return handleResponse(response);
+}
+
+/**
+ * Create a new channel for an organisation.
+ * @param {string} orgId - Organisation UUID
+ * @param {Object} channelData - Channel data
+ * @returns {Promise<Object>} Created channel object
+ */
+export async function createChannel(orgId, channelData) {
+  const response = await fetch(`${API_BASE_URL}/organisations/${orgId}/channels`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(channelData),
+  });
+
+  return handleResponse(response);
+}
+
+/**
+ * Get a single channel by ID.
+ * @param {string} channelId - Channel UUID
+ * @returns {Promise<Object>} Channel object
+ */
+export async function getChannel(channelId) {
+  const response = await fetch(`${API_BASE_URL}/channels/${channelId}`);
+  return handleResponse(response);
+}
+
+/**
+ * Update a channel.
+ * @param {string} channelId - Channel UUID
+ * @param {Object} channelData - Updated channel data
+ * @returns {Promise<Object>} Updated channel object
+ */
+export async function updateChannel(channelId, channelData) {
+  const response = await fetch(`${API_BASE_URL}/channels/${channelId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(channelData),
+  });
+
+  return handleResponse(response);
+}
+
+/**
+ * Delete a channel.
+ * @param {string} channelId - Channel UUID
+ * @returns {Promise<void>}
+ */
+export async function deleteChannel(channelId) {
+  const response = await fetch(`${API_BASE_URL}/channels/${channelId}`, {
     method: 'DELETE',
   });
 
