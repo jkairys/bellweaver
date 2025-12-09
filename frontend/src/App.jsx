@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Dashboard from './components/Dashboard'
 import FamilyManagement from './pages/FamilyManagement'
+import { FamilyProvider } from './contexts/FamilyContext' // Import FamilyProvider
 import './App.css'
 
 function App() {
@@ -28,7 +29,11 @@ function App() {
 
       <main className="app-content">
         {currentPage === 'dashboard' && <Dashboard />}
-        {currentPage === 'family' && <FamilyManagement />}
+        {currentPage === 'family' && (
+          <FamilyProvider> {/* Wrap with FamilyProvider */}
+            <FamilyManagement />
+          </FamilyProvider>
+        )}
       </main>
     </div>
   )

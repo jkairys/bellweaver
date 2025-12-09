@@ -141,3 +141,44 @@
     width: 100%;
   }
 }
+
+.child-organisations-section {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #eee;
+}
+
+.child-organisations-section h3 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.associated-orgs {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 1.5rem;
+}
+
+.associated-orgs li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background-color: #f8f8f8;
+  border: 1px solid #e0e0e0;
+  border-radius: 5px;
+  margin-bottom: 8px;
+}
+
+.add-org-control {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.add-org-control select {
+  flex-grow: 1;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}

@@ -39,6 +39,17 @@ events_bp = Blueprint("events", __name__, url_prefix="/api/events")
 # Create blueprint for family management routes
 family_bp = Blueprint("family", __name__, url_prefix="/api")
 
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+@family_bp.before_request
+def log_request_info():
+    from flask import request
+    logger.info(f"Request: {request.method} {request.url} from {request.remote_addr}")
+    if request.is_json:
+        logger.debug(f"JSON Data: {request.get_json()}")
+
 
 @user_bp.route("", methods=["GET"])
 def get_user():

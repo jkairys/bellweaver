@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import './ChannelConfig.css';
 
 function ChannelConfig({ channel, onSave, onCancel, onDelete, loading }) {
   const [channelType, setChannelType] = useState('compass');

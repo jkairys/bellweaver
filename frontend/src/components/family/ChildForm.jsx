@@ -1,11 +1,7 @@
-/**
- * ChildForm component - Form for creating/editing child profiles.
- */
-
 import React, { useState, useEffect } from 'react';
 import './ChildForm.css';
 
-function ChildForm({ child, onSubmit, onCancel, loading }) {
+function ChildForm({ child, onSubmit, onCancel, loading, availableOrganisations, onAddOrg, onRemoveOrg }) {
   const [formData, setFormData] = useState({
     name: '',
     date_of_birth: '',
@@ -14,6 +10,7 @@ function ChildForm({ child, onSubmit, onCancel, loading }) {
   });
 
   const [errors, setErrors] = useState({});
+  const [selectedOrgId, setSelectedOrgId] = useState(''); // State for selected org to add
 
   // Populate form when editing
   useEffect(() => {
@@ -101,6 +98,20 @@ function ChildForm({ child, onSubmit, onCancel, loading }) {
     onSubmit(submitData);
   };
 
+  const handleAddOrgSubmit = (e) => {
+      e.preventDefault();
+      if (selectedOrgId && onAddOrg) {
+          onAddOrg(selectedOrgId);
+          setSelectedOrgId('');
+      }
+  };
+
+  const filteredOrgs = availableOrganisations 
+      ? availableOrganisations.filter(org => 
+          !child?.organisations?.some(childOrg => childOrg.id === org.id)
+        )
+      : [];
+
   return (
     <div className="child-form-container">
       <h2>{child ? 'Edit Child' : 'Add Child'}</h2>
@@ -174,6 +185,45 @@ function ChildForm({ child, onSubmit, onCancel, loading }) {
           </button>
         </div>
       </form>
+
+      {child && (
+          <div className="child-organisations-section">
+              <h3>Organisations</h3>
+              
+              {child.organisations && child.organisations.length > 0 ? (
+                  <ul className="associated-orgs">
+                      {child.organisations.map(org => (
+                          <li key={org.id}>
+                              {org.name} ({org.type})
+                              <button type="button" onClick={() => onRemoveOrg(org.id)} disabled={loading}>Remove</button>
+                          </li>
+                      ))}
+                  </ul>
+              ) : (
+                  <p>No organisations associated.</p>
+              )}
+
+              <div className="add-org-control">
+                  <select 
+                      value={selectedOrgId} 
+                      onChange={(e) => setSelectedOrgId(e.target.value)}
+                      disabled={loading}
+                  >
+                      <option value="">Select Organisation...</option>
+                      {filteredOrgs.map(org => (
+                          <option key={org.id} value={org.id}>{org.name}</option>
+                      ))}
+                  </select>
+                  <button 
+                      type="button" 
+                      onClick={handleAddOrgSubmit} 
+                      disabled={!selectedOrgId || loading}
+                  >
+                      Add
+                  </button>
+              </div>
+          </div>
+      )}
     </div>
   );
 }

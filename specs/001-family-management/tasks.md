@@ -310,12 +310,12 @@
 
 ### Implementation
 
-- [ ] T078 Create FamilyContext provider in frontend/src/contexts/FamilyContext.jsx with state for children, organisations, channels
-- [ ] T079 Add CRUD operations to FamilyContext using familyApi service functions
-- [ ] T080 Wrap FamilyManagement page with FamilyProvider in frontend/src/App.jsx or FamilyManagement.jsx
-- [ ] T081 Update all family components to use FamilyContext instead of direct API calls
-- [ ] T082 Add loading states and error states to FamilyContext
-- [ ] T083 Implement optimistic updates for better UX (update UI before API response, rollback on error)
+- [X] T078 Create FamilyContext provider in frontend/src/contexts/FamilyContext.jsx with state for children, organisations, channels
+- [X] T079 Add CRUD operations to FamilyContext using familyApi service functions
+- [X] T080 Wrap FamilyManagement page with FamilyProvider in frontend/src/App.jsx or FamilyManagement.jsx
+- [X] T081 Update all family components to use FamilyContext instead of direct API calls
+- [X] T082 Add loading states and error states to FamilyContext
+- [X] T083 Implement optimistic updates for better UX (update UI before API response, rollback on error)
 
 **Checkpoint**: Frontend state management is complete. All components integrated with centralized state.
 
@@ -329,14 +329,14 @@
 
 ### Implementation
 
-- [ ] T084 [P] Add CSS styling for ChildList and ChildForm components in frontend/src/components/family/
-- [ ] T085 [P] Add CSS styling for OrganisationList and OrganisationForm components in frontend/src/components/family/
-- [ ] T086 [P] Add CSS styling for ChannelConfig component in frontend/src/components/family/
-- [ ] T087 Implement responsive layout for FamilyManagement page (grid/flex layout for desktop, stack for mobile)
-- [ ] T088 Add loading spinners/skeletons for API calls
-- [ ] T089 Add toast notification system for success/error messages
-- [ ] T090 Add form validation UI feedback (inline errors, required field indicators)
-- [ ] T091 Test accessibility (keyboard navigation, screen reader labels, ARIA attributes)
+- [X] T084 [P] Add CSS styling for ChildList and ChildForm components in frontend/src/components/family/
+- [X] T085 [P] Add CSS styling for OrganisationList and OrganisationForm components in frontend/src/components/family/
+- [X] T086 [P] Add CSS styling for ChannelConfig component in frontend/src/components/family/
+- [X] T087 Implement responsive layout for FamilyManagement page (grid/flex layout for desktop, stack for mobile)
+- [X] T088 Add loading spinners/skeletons for API calls
+- [X] T089 Add toast notification system for success/error messages
+- [X] T090 Add form validation UI feedback (inline errors, required field indicators)
+- [X] T091 Test accessibility (keyboard navigation, screen reader labels, ARIA attributes)
 
 **Checkpoint**: Frontend UI is polished, responsive, and accessible. Ready for user testing.
 
@@ -350,17 +350,17 @@
 
 ### Implementation
 
-- [ ] T092 [P] Manually test User Story 1 acceptance scenarios from spec.md using frontend UI
-- [ ] T093 [P] Manually test User Story 2 acceptance scenarios from spec.md using frontend UI
-- [ ] T094 [P] Manually test User Story 3 acceptance scenarios from spec.md using frontend UI
-- [ ] T095 [P] Manually test User Story 4 acceptance scenarios from spec.md using frontend UI
-- [ ] T096 [P] Manually test User Story 5 acceptance scenarios from spec.md using frontend UI
-- [ ] T097 [P] Manually test User Story 6 acceptance scenarios from spec.md using frontend UI
-- [ ] T098 Test edge cases from spec.md (duplicate org names, future dates, delete org with children, etc.)
-- [ ] T099 Run backend test suite with poetry run pytest to ensure existing tests pass
-- [ ] T100 Update CLAUDE.md with new models, endpoints, and frontend components added
-- [ ] T101 [P] Verify Docker build and deployment still works with new changes
-- [ ] T102 [P] Test database migration from scratch (create new DB, verify all tables created correctly)
+- [X] T092 [P] Manually test User Story 1 acceptance scenarios from spec.md using frontend UI
+- [X] T093 [P] Manually test User Story 2 acceptance scenarios from spec.md using frontend UI
+- [X] T094 [P] Manually test User Story 3 acceptance scenarios from spec.md using frontend UI
+- [X] T095 [P] Manually test User Story 4 acceptance scenarios from spec.md using frontend UI
+- [X] T096 [P] Manually test User Story 5 acceptance scenarios from spec.md using frontend UI
+- [X] T097 [P] Manually test User Story 6 acceptance scenarios from spec.md using frontend UI
+- [X] T098 Test edge cases from spec.md (duplicate org names, future dates, delete org with children, etc.)
+- [X] T099 Run backend test suite with poetry run pytest to ensure existing tests pass
+- [X] T100 Update CLAUDE.md with new models, endpoints, and frontend components added
+- [X] T101 [P] Verify Docker build and deployment still works with new changes
+- [X] T102 [P] Test database migration from scratch (create new DB, verify all tables created correctly)
 
 **Checkpoint**: Feature fully tested and documented. Ready for PR creation.
 
@@ -370,10 +370,10 @@
 
 **Purpose**: Final improvements that affect multiple user stories
 
-- [ ] T103 [P] Review all API error responses for consistency (400, 404, 409 status codes with proper error format)
-- [ ] T104 Add database indexes for performance (child.created_at, organisation.type, organisation.name, communication_channels.organisation_id)
-- [ ] T105 Review and optimize SQLAlchemy queries (use joins where needed, avoid N+1 queries)
-- [ ] T106 [P] Add API request logging for family endpoints in backend/bellweaver/api/routes.py
+- [X] T103 [P] Review all API error responses for consistency (400, 404, 409 status codes with proper error format)
+- [X] T104 Add database indexes for performance (child.created_at, organisation.type, organisation.name, communication_channels.organisation_id)
+- [X] T105 Review and optimize SQLAlchemy queries (use joins where needed, avoid N+1 queries)
+- [X] T106 [P] Add API request logging for family endpoints in backend/bellweaver/api/routes.py
 - [ ] T107 Security review: verify credentials never exposed in API responses, verify CSRF protection if needed
 - [ ] T108 Performance testing: verify system handles 10 children, 20 organisations without degradation (per success criteria SC-006)
 - [ ] T109 Run full test suite and build: poetry run pytest --cov && npm run build
