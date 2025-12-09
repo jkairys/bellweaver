@@ -9,9 +9,12 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from bellweaver.db.database import get_db
-from bellweaver.db.models import ApiPayload, Batch, Event
+from bellweaver.db.models import ApiPayload, Batch, Event, Child as DBChild
 from bellweaver.models.compass import CompassUser, CompassEvent
+from bellweaver.models.family import ChildCreate, ChildUpdate, Child as ChildResponse
 from bellweaver.parsers.compass import CompassParser
+import uuid
+from datetime import datetime
 
 # Create blueprint for user-related routes
 user_bp = Blueprint("users", __name__, url_prefix="/api/user")
@@ -194,6 +197,208 @@ def get_events():
         return jsonify(response), 200
 
     except Exception as e:
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+    finally:
+        db.close()
+
+
+# ==================== FAMILY MANAGEMENT ENDPOINTS ====================
+
+@family_bp.route("/children", methods=["POST"])
+def create_child():
+    """
+    Create a new child profile.
+
+    Request body should match ChildCreate schema:
+        {
+            "name": "Emma Johnson",
+            "date_of_birth": "2015-06-15",
+            "gender": "female",  # optional
+            "interests": "Soccer, reading"  # optional
+        }
+
+    Returns:
+        201: Child created successfully
+        400: Validation error (missing fields, future date, etc.)
+    """
+    from flask import request
+    db: Session = next(get_db())
+    try:
+        # Validate request data with Pydantic
+        data = request.get_json()
+        if not data:
+            raise ValidationError("Request body is required", "MISSING_BODY")
+
+        try:
+            child_data = ChildCreate(**data)
+        except Exception as e:
+            raise ValidationError(str(e), "VALIDATION_ERROR")
+
+        # Create ORM model
+        child = DBChild(
+            id=str(uuid.uuid4()),
+            name=child_data.name,
+            date_of_birth=child_data.date_of_birth,
+            gender=child_data.gender,
+            interests=child_data.interests,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
+        )
+
+        db.add(child)
+        db.commit()
+        db.refresh(child)
+
+        # Return response using Pydantic model
+        response = ChildResponse.model_validate(child)
+        return jsonify(response.model_dump(mode="json")), 201
+
+    except ValidationError:
+        raise
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+    finally:
+        db.close()
+
+
+@family_bp.route("/children/<child_id>", methods=["GET"])
+def get_child(child_id: str):
+    """
+    Get a child profile by ID.
+
+    Args:
+        child_id: UUID of the child
+
+    Returns:
+        200: Child data
+        404: Child not found
+    """
+    db: Session = next(get_db())
+    try:
+        stmt = select(DBChild).where(DBChild.id == child_id)
+        child = db.execute(stmt).scalar_one_or_none()
+
+        if not child:
+            return jsonify({"error": "Child not found"}), 404
+
+        response = ChildResponse.model_validate(child)
+        return jsonify(response.model_dump(mode="json")), 200
+
+    except Exception as e:
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+    finally:
+        db.close()
+
+
+@family_bp.route("/children", methods=["GET"])
+def list_children():
+    """
+    List all children.
+
+    Returns:
+        200: List of all children
+    """
+    db: Session = next(get_db())
+    try:
+        stmt = select(DBChild).order_by(DBChild.created_at.asc())
+        children = db.execute(stmt).scalars().all()
+
+        response = [ChildResponse.model_validate(child).model_dump(mode="json") for child in children]
+        return jsonify(response), 200
+
+    except Exception as e:
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+    finally:
+        db.close()
+
+
+@family_bp.route("/children/<child_id>", methods=["PUT"])
+def update_child(child_id: str):
+    """
+    Update a child profile.
+
+    Args:
+        child_id: UUID of the child
+
+    Request body should match ChildUpdate schema.
+
+    Returns:
+        200: Child updated successfully
+        400: Validation error
+        404: Child not found
+    """
+    from flask import request
+    db: Session = next(get_db())
+    try:
+        # Find child
+        stmt = select(DBChild).where(DBChild.id == child_id)
+        child = db.execute(stmt).scalar_one_or_none()
+
+        if not child:
+            return jsonify({"error": "Child not found"}), 404
+
+        # Validate request data
+        data = request.get_json()
+        if not data:
+            raise ValidationError("Request body is required", "MISSING_BODY")
+
+        try:
+            update_data = ChildUpdate(**data)
+        except Exception as e:
+            raise ValidationError(str(e), "VALIDATION_ERROR")
+
+        # Update fields
+        child.name = update_data.name
+        child.date_of_birth = update_data.date_of_birth
+        child.gender = update_data.gender
+        child.interests = update_data.interests
+        child.updated_at = datetime.utcnow()
+
+        db.commit()
+        db.refresh(child)
+
+        response = ChildResponse.model_validate(child)
+        return jsonify(response.model_dump(mode="json")), 200
+
+    except ValidationError:
+        raise
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+    finally:
+        db.close()
+
+
+@family_bp.route("/children/<child_id>", methods=["DELETE"])
+def delete_child(child_id: str):
+    """
+    Delete a child profile.
+
+    Cascades to remove all child-organisation associations per FR-017.
+
+    Args:
+        child_id: UUID of the child
+
+    Returns:
+        204: Child deleted successfully
+        404: Child not found
+    """
+    db: Session = next(get_db())
+    try:
+        stmt = select(DBChild).where(DBChild.id == child_id)
+        child = db.execute(stmt).scalar_one_or_none()
+
+        if not child:
+            return jsonify({"error": "Child not found"}), 404
+
+        db.delete(child)
+        db.commit()
+
+        return "", 204
+
+    except Exception as e:
+        db.rollback()
         return jsonify({"error": f"Internal server error: {str(e)}"}), 500
     finally:
         db.close()

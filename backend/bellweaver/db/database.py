@@ -68,6 +68,16 @@ def get_db() -> Generator[Session, None, None]:
         db.close()
 
 
+def get_engine():
+    """Get the SQLAlchemy engine instance."""
+    return engine
+
+
+def get_session() -> Session:
+    """Get a new database session."""
+    return SessionLocal()
+
+
 def init_db() -> None:
     """
     Initialize database schema.
