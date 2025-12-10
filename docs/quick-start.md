@@ -33,49 +33,72 @@ docker exec -it bellweaver bellweaver compass sync
 
 ## First Time Setup
 
-```bash
-# 1. Copy environment template (from project root)
-cp .env.example .env
+1.  **Clone the repository**:
+    ```bash
+    git clone https://github.com/jkairys/bellweaver.git
+    cd bellweaver
+    ```
 
-# 2. Edit with your credentials
-vim .env
+2.  **Copy environment template**: From the project root, copy the `.env.example` file to `.env`.
+    ```bash
+    cp .env.example .env
+    ```
 
-# Add the following to .env:
-# COMPASS_USERNAME=your_compass_username
-# COMPASS_PASSWORD=your_compass_password
-# COMPASS_BASE_URL=https://your-school.compass.education
-# CLAUDE_API_KEY=sk-ant-xxxxx (optional, for future filtering features)
+3.  **Configure `.env`**: Edit your `.env` file to set `COMPASS_MODE` and, if using real mode, your Compass credentials.
+    ```dotenv
+    # Use mock mode for local development
+    COMPASS_MODE=mock
 
-# 3. Navigate to backend directory and install dependencies
-cd packages/bellweaver
-poetry install --with dev
-```
+    # Configure real Compass credentials if needed (only when COMPASS_MODE=real)
+    COMPASS_BASE_URL=https://your-school.compass.education
+    COMPASS_USERNAME=your_username
+    COMPASS_PASSWORD=your_password
+
+    # Claude API Key (required for filtering)
+    CLAUDE_API_KEY=your-anthropic-api-key
+    ```
+    **Note**: In mock mode, the credential values don't matter (they're not used), but they are required by the client interface.
+
+4.  **Install Python packages**:
+    ```bash
+    # Install compass-client package first
+    cd packages/compass-client
+    poetry install --with dev
+
+    # Install bellweaver package (includes compass-client as a path dependency)
+    cd ../bellweaver
+    poetry install --with dev
+    ```
+
+5.  **Install Frontend dependencies**:
+    ```bash
+    cd ../../frontend
+    npm install
+    ```
+
 
 ## Using the CLI
 
+Run CLI commands from the `packages/bellweaver/` directory:
+
 ```bash
 cd packages/bellweaver
 
-# Sync data from Compass
+# Sync data from Compass (runs in mock mode by default if configured)
 poetry run bellweaver compass sync
 
-# Sync with custom date range
-poetry run bellweaver compass sync --days 30
+# Manage mock data (validate, update from real API)
+poetry run bellweaver mock --help
 
 # Start the API server
 poetry run bellweaver api serve
-
-# Start with debug mode
-poetry run bellweaver api serve --debug
 ```
 
 ## Running the Frontend
 
 ```bash
+# Navigate to the frontend directory
 cd frontend
-
-# Install dependencies (first time only)
-npm install
 
 # Start development server
 npm run dev
@@ -86,105 +109,107 @@ npm run dev
 
 ## Running Tests
 
+### Python Packages
+
+Navigate to the respective package directory to run tests:
+
 ```bash
-cd packages/bellweaver
+# Test bellweaver package (uses mock compass-client by default)
+cd packages/bellweaver && poetry run pytest -v
 
-# Run all tests
-poetry run pytest -v
+# Test compass-client package
+cd packages/compass-client && poetry run pytest -v
+```
 
-# Run integration tests with real Compass credentials
-poetry run pytest tests/test_compass_client_real.py -v
+### Frontend
 
-# Run specific test
-poetry run pytest tests/test_compass_client_real.py::test_login -v
+```bash
+# Navigate to frontend directory
+cd frontend
+
+# Run frontend tests (if applicable)
+npm test
 ```
 
 ## Development Commands
 
-```bash
-cd packages/bellweaver
+Run development commands from the respective package directory:
 
+### Python Packages (from `packages/bellweaver/` or `packages/compass-client/`)
+
+```bash
 # Format code (Black)
-poetry run black bellweaver tests
+poetry run black .
 
 # Lint code (Flake8)
-poetry run flake8 bellweaver tests
+poetry run flake8 .
 
 # Type check (mypy)
-poetry run mypy bellweaver
+poetry run mypy .
 
 # Install new packages
 poetry add package-name                # Production
 poetry add --group dev package-name    # Development only
 ```
 
+### Frontend (from `frontend/`)
+
+```bash
+# Lint and format
+npm run lint
+
+# Run tests
+npm test
+```
+
 ## Project Structure
+
+This project is a **monorepo** containing two independent Python packages (`compass-client`, `bellweaver`) and a Frontend application (`frontend`).
 
 ```
 bellweaver/
-├── packages/                      # Python packages (monorepo)
-│   ├── compass-client/            # Compass API client library
-│   │   ├── compass_client/
-│   │   │   ├── adapters/          # ✅ HTTP-based Compass client
-│   │   │   ├── models/            # Data models
-│   │   │   └── parsers/           # Validation layer
-│   │   ├── tests/
-│   │   └── pyproject.toml
+├── packages/                      # Python packages (monorepo root for Python code)
+│   ├── compass-client/            # Independent Compass API client library
+│   │   ├── compass_client/        # Source code for the compass-client package
+│   │   ├── data/mock/             # Mock data files
+│   │   ├── tests/                 # Unit and integration tests for compass-client
+│   │   └── pyproject.toml         # Poetry configuration for compass-client
 │   │
-│   └── bellweaver/                # Main application
-│       ├── bellweaver/
-│       │   ├── adapters/          # Calendar source adapters
-│       │   ├── filtering/         # ✅ Claude API filtering
-│       │   ├── db/                # ✅ Database layer
-│       │   ├── api/               # ✅ Flask REST API
-│       │   ├── cli/               # ✅ CLI interface
-│       │   └── models/            # Data models
-│       ├── tests/                 # Unit & integration tests
-│       └── pyproject.toml         # Poetry configuration
+│   └── bellweaver/                # Main Bellweaver application
+│       ├── bellweaver/            # Source code for the bellweaver package
+│       │   ├── cli/               # CLI interface
+│       │   ├── api/               # Flask REST API
+│       │   ├── filtering/         # LLM filtering logic
+│       │   ├── db/                # Database layer
+│       │   ├── mappers/           # Domain mappers
+│       │   ├── models/            # Data models
+│       │   └── services/          # Application services
+│       ├── tests/                 # Unit and integration tests for bellweaver
+│       └── pyproject.toml         # Poetry configuration for bellweaver (depends on compass-client)
 │
-├── frontend/                      # React frontend (Vite)
-├── docs/                          # Documentation
-├── .env.example                   # Environment template
-└── README.md                      # Project overview
+├── frontend/                      # React frontend application
+├── docs/                          # Project documentation
+├── .github/workflows/             # GitHub Actions CI/CD workflows
+├── .env.example                   # Environment variable template
+├── .gitignore                     # Git ignore rules
+├── docker-compose.yml             # Docker Compose configuration
+├── Dockerfile                     # Docker build configuration
+└── README.md                      # Main project README
 ```
-
-## Current Status
-
-✅ **Compass Authentication** - HTTP-based client working (~1 second)
-✅ **Calendar Fetching** - Can retrieve events from Compass API
-✅ **Mock Data** - Realistic test data available for development
-✅ **Tests Passing** - Integration tests with real credentials working
-⏳ **In Progress** - Database integration, API routes, filtering pipeline
 
 ## Troubleshooting
 
-**Poetry not finding packages?**
-
-```bash
-cd packages/bellweaver
-poetry lock --refresh
-poetry install --with dev
-```
-
-**Virtual environment issues?**
-
-```bash
-cd packages/bellweaver
-poetry env remove python
-poetry install --with dev
-```
-
-**Tests failing?**
-
-```bash
-# Check .env file has correct credentials
-cat .env
-
-# Ensure you're in the backend directory
-cd packages/bellweaver
-poetry run pytest -v
-```
+-   **"Module 'compass_client' not found"**: Ensure `compass-client` is installed in your environment by running `cd packages/compass-client && poetry install`. Then, from `packages/bellweaver`, run `poetry install`.
+-   **"Authentication failed" in real mode**: Verify your Compass credentials and `COMPASS_BASE_URL` in your `.env` file.
+-   **Invalid mock data**: Run `cd packages/compass-client && poetry run python -m compass_client.cli mock validate` to check mock data integrity.
+-   **Poetry/Virtual environment issues?**:
+    ```bash
+    # From the respective package directory (e.g., packages/bellweaver)
+    poetry lock --refresh
+    poetry env remove python # Removes existing virtual environment
+    poetry install --with dev
+    ```
 
 ## Next Steps
 
-See `docs/index.md` for complete project documentation and development roadmap.
+See **[docs/index.md](docs/index.md)** for complete project documentation and the development roadmap.

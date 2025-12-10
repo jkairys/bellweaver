@@ -24,11 +24,15 @@ CLAUDE.md
 **/build/
 
 # Backend
-backend/.venv/
-backend/.env
-backend/.env.*
-backend/data/
-backend/debug_screenshots/
+packages/bellweaver/.venv/
+packages/bellweaver/.env
+packages/bellweaver/.env.*
+packages/bellweaver/data/
+packages/bellweaver/debug_screenshots/
+packages/compass-client/.venv/
+packages/compass-client/.env
+packages/compass-client/.env.*
+packages/compass-client/data/
 
 # Frontend
 frontend/node_modules/
@@ -49,9 +53,14 @@ frontend/.env.*
 Thumbs.db
 
 # Testing
-backend/tests/
+packages/bellweaver/tests/
+packages/compass-client/tests/
 frontend/src/**/*.test.js
 frontend/src/**/*.test.jsx
 
 # CI/CD
 .github/
+
+# Coverage
+coverage/
+

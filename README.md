@@ -20,12 +20,13 @@ Parents receive overwhelming amounts of communication from multiple school sourc
 
 ## Current Status
 
-✅ **Compass HTTP Client** - Direct HTTP authentication working (~1 second)
-✅ **Tests Passing** - Integration tests with real credentials working
-✅ **Mock Client** - Realistic test data for development
-⏳ **In Progress** - Database integration, API routes, and filtering pipeline
+✅ **Compass API Decoupling**: Compass API integration has been successfully decoupled into an independent `compass-client` package.
+✅ **Mock Data Infrastructure**: Full mock data support enables local development and CI/CD testing without real Compass credentials.
+✅ **Monorepo Structure**: The project is now organized as a multi-package monorepo with `bellweaver` and `compass-client` as independent Python packages.
+✅ **CI/CD Optimization**: GitHub Actions workflows are configured for selective testing, improving efficiency.
+⏳ **In Progress**: Database integration, advanced API routes, event filtering pipeline, and comprehensive documentation updates.
 
-See [docs/index.md](docs/index.md) for detailed status.
+See [docs/index.md](docs/index.md) for detailed status and [docs/migration-compass-decoupling.md](docs/migration-compass-decoupling.md) for migration details.
 
 ## MVP Scope (Phase 1)
 
@@ -114,7 +115,7 @@ packages/bellweaver/
 └── README.md                   # Package documentation
 ```
 
-### Supporting Files
+### Root-Level Files
 
 ```
 bellweaver/                     # Project root
@@ -127,17 +128,45 @@ bellweaver/                     # Project root
 │   ├── index.md
 │   ├── quick-start.md
 │   ├── architecture.md
-│   └── docker-deployment.md
+│   ├── docker-deployment.md
+│   └── migration-compass-decoupling.md # New migration guide
 ├── .github/workflows/          # CI/CD pipelines
 │   ├── test-compass.yml        # CI for compass-client only
 │   └── test-bellweaver.yml     # CI for bellweaver only
 ├── .env.example                # Environment template
 ├── .gitignore                  # Git ignore rules
 ├── docker-compose.yml          # Docker deployment
+├── Dockerfile                  # Docker build configuration
 └── README.md                   # This file
 ```
 
-### Architecture Overview
+## Quick Start
+
+Get started in 5 minutes! For full details, see **[docs/quick-start.md](docs/quick-start.md)**.
+
+### Zero to Running in 5 Commands
+
+```bash
+# 1. Clone and checkout branch
+git clone https://github.com/jkairys/bellweaver.git && cd bellweaver
+git checkout 002-compass-api-decoupling # Replace with your feature branch
+
+# 2. Install compass-client
+cd packages/compass-client && poetry install --with dev
+
+# 3. Install bellweaver
+cd ../bellweaver && poetry install --with dev
+
+# 4. Configure mock mode (create .env from .env.example)
+cd ../.. && cp .env.example .env && echo "COMPASS_MODE=mock" >> .env
+
+# 5. Run tests to verify
+cd packages/bellweaver && poetry run pytest -v
+```
+
+**Expected result**: All tests pass, you're ready to develop! 🚀
+
+## Architecture Overview
 
 ```
 ┌─────────────────────────────────────────┐
@@ -165,206 +194,48 @@ bellweaver/                     # Project root
 ```
 
 **Key Benefits:**
-- **Decoupled**: compass-client can be developed/tested independently
+- **Decoupled**: `compass-client` can be developed/tested independently
 - **Mock Support**: Full development possible without Compass credentials
 - **CI-Friendly**: Tests run in mock mode, no geo-blocking issues
 - **Testable**: Each package has its own isolated test suite
 - **Clear Boundaries**: API client logic separated from application logic
 
-## Deployment Options
-
-### Option 1: Docker (Recommended - Easiest)
-
-See **[Docker Deployment Guide](docs/docker-deployment.md)** for complete instructions.
-
-The Docker setup uses a multi-stage build that packages both frontend and backend into a single container. The database and environment file are mounted as volumes, so they're shared between Docker and local development.
-
-Quick start:
-
-```bash
-# Copy environment template
-cp .env.example .env
-
-# Build and start the services
-docker-compose build
-docker-compose up -d
-
-# By default, COMPASS_MODE is set to 'mock' in docker-compose.yml for convenience.
-# To run in 'real' mode, you can override this in your .env file or directly in docker-compose.yml.
-# Ensure your Compass credentials are set in .env if running in 'real' mode.
-
-# Sync data from Compass (can run in Docker or locally)
-docker exec -it bellweaver bellweaver compass sync
-
-# Access at http://localhost:5000
-```
-
-**Key features:**
-- Single container serves both frontend and backend
-- Database persists in `packages/bellweaver/data/` (mounted volume)
-- Same environment and database used whether running in Docker or locally
-- No data migration needed when switching between Docker and local development
-
-### Option 2: Local Development
-
-#### Prerequisites
-
-- Python 3.10+
-- Node.js 20+
-- Poetry (for dependency management)
-- Compass account credentials
-
-#### Installation
-
-1. **Clone the repository**:
-
-```bash
-git clone <repo-url>
-cd bellweaver
-```
-
-2. **Set up the Python packages**:
-
-```bash
-# Install compass-client package first
-cd packages/compass-client
-poetry install --with dev
-
-# Install bellweaver package (includes compass-client as dependency)
-cd ../bellweaver
-poetry install --with dev
-
-# Verify both packages are installed
-poetry run python -c "from compass_client import create_client; print('✓ compass-client available')"
-```
-
-3. **Set up the frontend**:
-
-```bash
-cd ../../frontend
-npm install
-```
-
-4. **Set up environment variables**:
-
-```bash
-# From project root
-cp .env.example .env
-```
-
-Then edit `.env` with your actual values:
-
-```bash
-# Compass API Mode (mock for development, real for production)
-COMPASS_MODE=mock  # Start with mock mode (no credentials needed)
-
-# Compass credentials (only required when COMPASS_MODE=real)
-COMPASS_USERNAME=your_compass_username
-COMPASS_PASSWORD=your_compass_password
-COMPASS_BASE_URL=https://your-school.compass.education
-
-# Claude API Key (required for filtering)
-CLAUDE_API_KEY=your-anthropic-api-key
-```
-
-5. **Verify installation**:
-
-```bash
-cd packages/bellweaver
-poetry run pytest  # All tests use mock mode by default
-```
-
-#### Running in Development Mode
-
-Run frontend and backend separately with hot reload:
-
-```bash
-# Terminal 1: Start backend API
-cd packages/bellweaver
-poetry run bellweaver api serve --debug
-
-# Terminal 2: Start frontend dev server
-cd frontend
-npm run dev
-```
-
-Access:
-- Frontend: http://localhost:3000 (with hot reload)
-- Backend API: http://localhost:5000/api/*
-
 ## Usage
 
-### CLI Mode
+For detailed usage instructions, including running in mock/real modes, refreshing mock data, and testing, please refer to the **[Quick Start Guide](docs/quick-start.md)**.
 
-Run CLI commands from `packages/bellweaver/` directory:
-
-**Sync from Compass**:
+### CLI Mode (from `packages/bellweaver/`)
 
 ```bash
-cd packages/bellweaver
+# Sync data from Compass (runs in mock mode by default if configured)
 poetry run bellweaver compass sync
-```
 
-**Manage mock data** (for testing without credentials):
-
-```bash
-cd packages/bellweaver
-poetry run bellweaver mock update
-```
-
-**View CLI help**:
-
-```bash
-cd packages/bellweaver
-poetry run bellweaver --help
-poetry run bellweaver compass --help
-poetry run bellweaver api --help
+# Manage mock data (validate, update from real API)
+poetry run bellweaver mock --help
 ```
 
 ### Web UI
 
-**Start the Flask API server** (from `packages/bellweaver/`):
+Start the Flask API server (from `packages/bellweaver/`):
 
 ```bash
-cd packages/bellweaver
 poetry run bellweaver api serve
 ```
 
-Then open <http://localhost:5000> in your browser.
-
-Features:
-
-- Onboarding form for credentials and child profile
-- Dashboard showing next 2 weeks of relevant events
-- Sync button to fetch & filter new events
-- Simple, clean interface
+Then access the API at `http://localhost:5000` (frontend runs separately, see Quick Start).
 
 ## Development
 
-All development commands should be run from the `packages/bellweaver/` directory:
+For a complete development workflow, including local setup, testing, and debugging, see the **[Quick Start Guide](docs/quick-start.md)**.
 
-### Running Tests
-
-```bash
-cd packages/bellweaver
-poetry run pytest
-```
-
-### Code Quality
+### Running Tests (from `packages/bellweaver/` or `packages/compass-client/`)
 
 ```bash
-cd packages/bellweaver
-poetry run black bellweaver tests
-poetry run flake8 bellweaver tests
-poetry run mypy bellweaver
-```
+# Run tests for bellweaver (uses mock compass-client by default)
+cd packages/bellweaver && poetry run pytest
 
-### Development Mode
-
-```bash
-cd packages/bellweaver
-export FLASK_ENV=development
-poetry run flask run --debug
+# Run tests for compass-client
+cd packages/compass-client && poetry run pytest
 ```
 
 ## Key Design Decisions
@@ -397,55 +268,12 @@ poetry run flask run --debug
 
 ## Next Steps
 
-### Phase 1 (MVP - Current Phase)
-
-- [x] Project scaffold with Poetry
-- [x] Compass HTTP client
-- [x] Mock Compass adapter
-- [x] LLM filter implementation
-- [x] Credential encryption
-- [x] Integration tests
-- [ ] Database layer integration
-- [ ] CLI interface
-- [ ] Flask backend API
-- [ ] Web UI
-
-### Phase 2 (Multi-Source)
-
-- [ ] Add normalization layer
-- [ ] Integrate Class Dojo
-- [ ] Integrate HubHello
-- [ ] Integrate Xplore
-- [ ] Advanced filtering UI
-
-## Troubleshooting
-
-### Poetry Issues
-
-```bash
-# Update lock file
-poetry lock --refresh
-
-# Clear cache
-poetry cache clear . --all
-```
-
-### Database Reset
-
-```bash
-rm packages/bellweaver/data/bellweaver.db
-```
+This project is under active development. For detailed next steps and task breakdowns, please refer to the **[Project Documentation](docs/index.md)**.
 
 ## Contributing
 
-This is a personal project, but feel free to fork and adapt!
+We welcome contributions! If you're interested in contributing, please fork the repository and submit a pull request. For major changes, please open an issue first to discuss what you would like to change.
 
 ## License
 
-TBD
-
-## References
-
-Keeping these for later if required:
-
-- <https://github.com/VeNoMouS/cloudscraper>
+This project is licensed under the MIT License - see the LICENSE file for details.
