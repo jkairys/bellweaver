@@ -2,21 +2,16 @@
 
 import json
 import os
-import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
-import typer
 from dotenv import load_dotenv
 
 from compass_client.client import CompassClient
-from compass_client.models import CompassEvent, CompassUser
 
 # Load environment variables from .env
 load_dotenv()
-
-app = typer.Typer()
 
 # Path to mock data directory
 MOCK_DATA_DIR = Path(__file__).parent.parent / "data" / "mock"
@@ -131,13 +126,13 @@ def write_mock_data(
     user_file = MOCK_DATA_DIR / "compass_user.json"
     with open(user_file, "w") as f:
         json.dump(user_data, f, indent=2)
-    typer.echo(f"✓ Wrote user data to {user_file}")
+    print(f"✓ Wrote user data to {user_file}")
     
     # Write events data
     events_file = MOCK_DATA_DIR / "compass_events.json"
     with open(events_file, "w") as f:
         json.dump(events_data, f, indent=2)
-    typer.echo(f"✓ Wrote events data to {events_file}")
+    print(f"✓ Wrote events data to {events_file}")
 
 
 def update_schema_version() -> None:
@@ -152,74 +147,64 @@ def update_schema_version() -> None:
     
     with open(schema_file, "w") as f:
         json.dump(schema_data, f, indent=2)
-    typer.echo(f"✓ Updated schema version in {schema_file}")
+    print(f"✓ Updated schema version in {schema_file}")
 
 
-@app.command()
-def refresh_mock_data(
-    username: str = typer.Option(
-        ..., envvar="COMPASS_USERNAME", help="Compass API username"
-    ),
-    password: str = typer.Option(
-        ..., envvar="COMPASS_PASSWORD", help="Compass API password", prompt=True
-    ),
-    base_url: str = typer.Option(
-        ..., envvar="COMPASS_BASE_URL", help="Compass base URL"
-    ),
-    skip_sanitize: bool = typer.Option(
-        False, "--skip-sanitize", help="Skip PII sanitization (NOT recommended)"
-    ),
-) -> None:
+def refresh_mock_data(username: str = None, password: str = None, base_url: str = None, skip_sanitize: bool = False) -> None:
     """Refresh mock data by fetching fresh samples from real Compass API.
     
-    Requires valid Compass credentials via environment variables or CLI options.
+    Requires valid Compass credentials via environment variables or parameters.
     Sanitizes data to remove PII before storing in repository.
-    
-    Example:
-        poetry run compass-client refresh-mock-data \\
-            --username myuser \\
-            --base-url https://myschool.compass.education
     """
-    typer.echo("Refreshing mock data from Compass API...")
-    typer.echo(f"Base URL: {base_url}")
-    typer.echo(f"Username: {username}")
+    # Get credentials from environment if not provided
+    if not username:
+        username = os.getenv("COMPASS_USERNAME")
+        if not username:
+            username = input("Compass username: ")
+    
+    if not password:
+        password = os.getenv("COMPASS_PASSWORD")
+        if not password:
+            import getpass
+            password = getpass.getpass("Compass password: ")
+    
+    if not base_url:
+        base_url = os.getenv("COMPASS_BASE_URL")
+        if not base_url:
+            base_url = input("Compass base URL: ")
+    
+    print("Refreshing mock data from Compass API...")
+    print(f"Base URL: {base_url}")
+    print(f"Username: {username}")
     
     try:
         # Fetch real data
-        typer.echo("\nFetching data from Compass API...")
+        print("\nFetching data from Compass API...")
         user_data, events_data = fetch_real_data(username, password, base_url)
-        typer.echo(f"✓ Fetched user data: {len(str(user_data))} bytes")
-        typer.echo(f"✓ Fetched {len(events_data)} events")
+        print(f"✓ Fetched user data: {len(str(user_data))} bytes")
+        print(f"✓ Fetched {len(events_data)} events")
         
         # Sanitize if not skipped
         if not skip_sanitize:
-            typer.echo("\nSanitizing data (removing PII)...")
+            print("\nSanitizing data (removing PII)...")
             user_data = sanitize_user_data(user_data)
             events_data = sanitize_event_data(events_data)
-            typer.echo("✓ Data sanitized")
+            print("✓ Data sanitized")
         else:
-            typer.echo(
-                "⚠️  Skipping sanitization - PII will be included in mock data"
-            )
+            print("⚠️  Skipping sanitization - PII will be included in mock data")
         
         # Write to files
-        typer.echo("\nWriting mock data files...")
+        print("\nWriting mock data files...")
         write_mock_data(user_data, events_data)
         
         # Update schema version
-        typer.echo("\nUpdating schema version...")
+        print("\nUpdating schema version...")
         update_schema_version()
         
-        typer.echo("\n✅ Mock data refresh completed successfully!")
-        typer.echo(f"Mock data location: {MOCK_DATA_DIR}")
-        typer.echo(
-            "Next steps: Commit the updated mock data files to your repository"
-        )
+        print("\n✅ Mock data refresh completed successfully!")
+        print(f"Mock data location: {MOCK_DATA_DIR}")
+        print("Next steps: Commit the updated mock data files to your repository")
         
     except Exception as e:
-        typer.echo(f"\n❌ Error refreshing mock data: {e}", err=True)
-        raise typer.Exit(1)
-
-
-if __name__ == "__main__":
-    app()
+        print(f"\n❌ Error refreshing mock data: {e}")
+        raise

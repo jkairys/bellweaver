@@ -113,15 +113,15 @@
 
 ### Implementation for User Story 3
 
-- [ ] T049 [P] [US3] Create cli module in `packages/compass-client/compass_client/cli/__init__.py`
-- [ ] T050 [US3] Create refresh_mock_data.py in `packages/compass-client/compass_client/cli/refresh_mock_data.py` with CLI command
-- [ ] T051 [US3] Implement fetch_real_data() function in refresh_mock_data.py to authenticate and fetch from real API
-- [ ] T052 [US3] Implement sanitize_user_data() function in refresh_mock_data.py to remove PII from user data
-- [ ] T053 [US3] Implement sanitize_event_data() function in refresh_mock_data.py to remove PII from event data
-- [ ] T054 [US3] Implement write_mock_data() function in refresh_mock_data.py to write sanitized data to JSON files
-- [ ] T055 [US3] Implement update_schema_version() function in refresh_mock_data.py to update schema_version.json
-- [ ] T056 [US3] Add CLI entry point in `packages/compass-client/pyproject.toml` for refresh-mock-data command
-- [ ] T057 [US3] Add mock validate CLI command in `packages/bellweaver/bellweaver/cli/commands/mock.py`
+- [X] T049 [P] [US3] Create cli module in `packages/compass-client/compass_client/cli/__init__.py`
+- [X] T050 [US3] Create refresh_mock_data.py in `packages/compass-client/compass_client/cli/refresh_mock_data.py` with CLI command
+- [X] T051 [US3] Implement fetch_real_data() function in refresh_mock_data.py to authenticate and fetch from real API
+- [X] T052 [US3] Implement sanitize_user_data() function in refresh_mock_data.py to remove PII from user data
+- [X] T053 [US3] Implement sanitize_event_data() function in refresh_mock_data.py to remove PII from event data
+- [X] T054 [US3] Implement write_mock_data() function in refresh_mock_data.py to write sanitized data to JSON files
+- [X] T055 [US3] Implement update_schema_version() function in refresh_mock_data.py to update schema_version.json
+- [X] T056 [US3] Add CLI entry point in `packages/compass-client/pyproject.toml` for refresh-mock-data command
+- [X] T057 [US3] Add mock validate CLI command in `packages/bellweaver/bellweaver/cli/commands/mock.py`
 - [ ] T058 [US3] Test mock data refresh: Run `poetry run python -m compass_client.cli refresh-mock-data` with real credentials
 - [ ] T059 [US3] Verify sanitized data: Check that PII is removed from updated compass_user.json and compass_events.json
 - [ ] T060 [US3] Verify updated data validates: Run CompassParser.parse() on refreshed mock data
