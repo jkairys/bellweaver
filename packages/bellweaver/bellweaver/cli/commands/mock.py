@@ -2,16 +2,16 @@
 CLI commands for managing mock data.
 """
 
-import typer
 import json
 import os
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
-from datetime import datetime, timedelta
-from dotenv import load_dotenv
 
+import typer
 from compass_client.cli.refresh_mock_data import fetch_real_data
 from compass_client.mock_validator import load_and_validate_mock_data
+from dotenv import load_dotenv
 
 app = typer.Typer(help="Manage mock data for development and testing")
 
@@ -65,7 +65,7 @@ def update_mock_data(
             )
 
         # Ensure base_url has https://
-        if not base_url.startswith("http"):
+        if not base_url or not base_url.startswith("http"):
             base_url = f"https://{base_url}"
 
         # Resolve output directory if provided

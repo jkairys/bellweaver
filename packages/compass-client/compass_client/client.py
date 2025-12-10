@@ -126,7 +126,7 @@ class CompassClient:
             Dictionary of form field names and values (empty dict if no form found)
         """
         soup = BeautifulSoup(html_content, "html.parser")
-        form_data: Dict[str, str] = {} # Explicitly declare type
+        form_data: Dict[str, str] = {}  # Explicitly declare type
 
         form = soup.find("form")
         if not form:
@@ -136,8 +136,10 @@ class CompassClient:
             name = input_field.get("name")
             if name:  # Ensure name is not None
                 value = input_field.get("value", "")
-                if value is not None: # Ensure value is not None, though get with default should prevent
-                    form_data[name] = str(value) # Explicitly cast to str
+                if (
+                    value is not None
+                ):  # Ensure value is not None, though get with default should prevent
+                    form_data[str(name)] = str(value)  # Explicitly cast to str
 
         if "__EVENTTARGET" not in form_data:
             form_data["__EVENTTARGET"] = "button1"
