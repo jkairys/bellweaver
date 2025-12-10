@@ -33,10 +33,10 @@ WORKDIR /app
 RUN pip install poetry==1.7.1
 
 # Copy backend dependency files and README
-COPY backend/pyproject.toml backend/poetry.lock backend/README.md ./
+COPY packages/bellweaver/pyproject.toml packages/bellweaver/poetry.lock packages/bellweaver/README.md ./
 
 # Copy backend source code (needed for poetry install to work with scripts)
-COPY backend/bellweaver ./bellweaver
+COPY packages/bellweaver/bellweaver ./bellweaver
 
 # Configure Poetry to not create virtual environment (we're in a container)
 RUN poetry config virtualenvs.create false

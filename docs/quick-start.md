@@ -47,14 +47,14 @@ vim .env
 # CLAUDE_API_KEY=sk-ant-xxxxx (optional, for future filtering features)
 
 # 3. Navigate to backend directory and install dependencies
-cd backend
+cd packages/bellweaver
 poetry install --with dev
 ```
 
 ## Using the CLI
 
 ```bash
-cd backend
+cd packages/bellweaver
 
 # Sync data from Compass
 poetry run bellweaver compass sync
@@ -87,7 +87,7 @@ npm run dev
 ## Running Tests
 
 ```bash
-cd backend
+cd packages/bellweaver
 
 # Run all tests
 poetry run pytest -v
@@ -102,16 +102,16 @@ poetry run pytest tests/test_compass_client_real.py::test_login -v
 ## Development Commands
 
 ```bash
-cd backend
+cd packages/bellweaver
 
 # Format code (Black)
-poetry run black src tests
+poetry run black bellweaver tests
 
 # Lint code (Flake8)
-poetry run flake8 src tests
+poetry run flake8 bellweaver tests
 
 # Type check (mypy)
-poetry run mypy src
+poetry run mypy bellweaver
 
 # Install new packages
 poetry add package-name                # Production
@@ -122,25 +122,30 @@ poetry add --group dev package-name    # Development only
 
 ```
 bellweaver/
-├── backend/
-│   ├── bellweaver/
-│   │   ├── adapters/
-│   │   │   ├── compass.py         # ✅ HTTP-based Compass client (working)
-│   │   │   └── compass_mock.py    # ✅ Mock client for testing (working)
-│   │   ├── filtering/
-│   │   │   └── llm_filter.py      # ✅ Claude API filtering (implemented, not integrated)
-│   │   ├── db/
-│   │   │   └── credentials.py     # ✅ Credential encryption (implemented, not integrated)
-│   │   ├── api/                   # ⏳ TODO - Flask API routes
-│   │   └── models/                # ⏳ TODO - Data models
-│   ├── tests/
-│   │   ├── test_compass_client_real.py  # ✅ Integration tests (working)
-│   │   └── test_fixtures.py             # ✅ Fixture tests (working)
-│   └── pyproject.toml            # Poetry configuration
+├── packages/                      # Python packages (monorepo)
+│   ├── compass-client/            # Compass API client library
+│   │   ├── compass_client/
+│   │   │   ├── adapters/          # ✅ HTTP-based Compass client
+│   │   │   ├── models/            # Data models
+│   │   │   └── parsers/           # Validation layer
+│   │   ├── tests/
+│   │   └── pyproject.toml
+│   │
+│   └── bellweaver/                # Main application
+│       ├── bellweaver/
+│       │   ├── adapters/          # Calendar source adapters
+│       │   ├── filtering/         # ✅ Claude API filtering
+│       │   ├── db/                # ✅ Database layer
+│       │   ├── api/               # ✅ Flask REST API
+│       │   ├── cli/               # ✅ CLI interface
+│       │   └── models/            # Data models
+│       ├── tests/                 # Unit & integration tests
+│       └── pyproject.toml         # Poetry configuration
 │
-├── docs/                         # Documentation
-├── .env.example                  # Environment template (for Docker and local)
-└── README.md                     # Project overview
+├── frontend/                      # React frontend (Vite)
+├── docs/                          # Documentation
+├── .env.example                   # Environment template
+└── README.md                      # Project overview
 ```
 
 ## Current Status
@@ -156,7 +161,7 @@ bellweaver/
 **Poetry not finding packages?**
 
 ```bash
-cd backend
+cd packages/bellweaver
 poetry lock --refresh
 poetry install --with dev
 ```
@@ -164,7 +169,7 @@ poetry install --with dev
 **Virtual environment issues?**
 
 ```bash
-cd backend
+cd packages/bellweaver
 poetry env remove python
 poetry install --with dev
 ```
@@ -176,7 +181,7 @@ poetry install --with dev
 cat .env
 
 # Ensure you're in the backend directory
-cd backend
+cd packages/bellweaver
 poetry run pytest -v
 ```
 

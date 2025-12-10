@@ -45,9 +45,9 @@ npm install
 
 ### Development
 
-1. Start the backend API server (from the `backend/` directory):
+1. Start the backend API server (from the `packages/bellweaver/` directory):
    ```bash
-   cd ../backend
+   cd ../packages/bellweaver
    poetry run bellweaver api serve
    ```
 

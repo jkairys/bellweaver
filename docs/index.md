@@ -21,42 +21,42 @@ Bellweaver is a school calendar event aggregation and filtering tool that consol
 
 ### What's Working ✅
 
-1. **Compass HTTP Client** (`backend/bellweaver/adapters/compass.py`)
+1. **Compass HTTP Client** (`packages/bellweaver/bellweaver/adapters/compass.py`)
    - Direct HTTP authentication (no browser automation)
    - Calendar event fetching from Compass API
    - Session management with cookies
    - Fast performance (~1 second total)
    - Integration tests passing
 
-2. **Mock Client** (`backend/bellweaver/adapters/compass_mock.py`)
+2. **Mock Client** (`packages/bellweaver/bellweaver/adapters/compass_mock.py`)
    - Realistic synthetic test data
    - Same interface as real client
    - No credentials required
 
-3. **LLM Filter** (`backend/bellweaver/filtering/llm_filter.py`)
+3. **LLM Filter** (`packages/bellweaver/bellweaver/filtering/llm_filter.py`)
    - Claude API integration implemented
    - Event filtering and summarization
    - Not yet integrated into pipeline
 
-4. **Credential Manager** (`backend/bellweaver/db/credentials.py`)
+4. **Credential Manager** (`packages/bellweaver/bellweaver/db/credentials.py`)
    - Fernet encryption implemented
    - Not yet integrated with database
 
-5. **Database Layer** (`backend/bellweaver/db/`)
+5. **Database Layer** (`packages/bellweaver/bellweaver/db/`)
    - SQLAlchemy 2.0 with DeclarativeBase
    - Batch tracking for adapter method calls
    - ApiPayload storage for raw API responses
    - Encrypted credential storage
    - Full test coverage (26 tests passing)
 
-6. **CLI Interface** (`backend/bellweaver/cli/`)
+6. **CLI Interface** (`packages/bellweaver/bellweaver/cli/`)
    - Typer-based command-line interface
    - Mock data management commands
    - Compass sync commands (user details and events)
    - API server management commands
    - All 75 tests passing
 
-7. **Flask API** (`backend/bellweaver/api/`)
+7. **Flask API** (`packages/bellweaver/bellweaver/api/`)
    - Application factory pattern
    - REST endpoints: `/api/user`, `/api/events`
    - Static file serving for production frontend
@@ -117,26 +117,25 @@ Bellweaver is a school calendar event aggregation and filtering tool that consol
 
 ```
 bellweaver/
-├── backend/
-│   ├── src/
-│   │   ├── adapters/
-│   │   │   ├── compass.py         # ✅ HTTP-based Compass client
-│   │   │   └── compass_mock.py    # ✅ Mock client for testing
-│   │   ├── filtering/
-│   │   │   └── llm_filter.py      # ✅ Claude API filtering
-│   │   ├── db/
-│   │   │   └── credentials.py     # ✅ Credential encryption
-│   │   ├── api/                   # ⏳ TODO - Flask routes
-│   │   └── models/                # ⏳ TODO - Data models
-│   ├── tests/
-│   │   ├── test_compass_client_real.py   # ✅ Integration tests
-│   │   └── test_fixtures.py              # ✅ Fixture tests
-│   ├── pyproject.toml             # Poetry configuration
-│   └── .env.example               # Environment template
-├── docs/
-│   ├── index.md                   # This file
-│   ├── quick-start.md            # Setup guide
-│   └── architecture.md           # Technical design
+├── packages/                      # Python packages (monorepo)
+│   ├── compass-client/            # Compass API client library
+│   │   ├── compass_client/
+│   │   │   ├── adapters/          # ✅ HTTP-based Compass client
+│   │   │   ├── models/            # Data models
+│   │   │   └── parsers/           # Validation layer
+│   │   └── tests/
+│   └── bellweaver/                # Main application
+│       ├── bellweaver/
+│       │   ├── adapters/          # Calendar adapters
+│       │   ├── db/                # ✅ Database layer
+│       │   ├── filtering/         # ✅ Claude API filtering
+│       │   ├── models/            # Data models
+│       │   ├── api/               # ✅ Flask REST API
+│       │   └── cli/               # ✅ CLI interface
+│       ├── tests/                 # Unit & integration tests
+│       └── pyproject.toml         # Poetry configuration
+├── frontend/                      # React frontend (Vite)
+├── docs/                          # Documentation
 └── README.md                      # Project overview
 ```
 
@@ -145,32 +144,32 @@ bellweaver/
 ### Setup
 
 ```bash
-cd backend
+cd packages/bellweaver
 poetry install --with dev
-cp .env.example .env
+cp ../.env.example ../.env
 # Edit .env with your credentials
 ```
 
 ### Testing
 
 ```bash
-cd backend
-poetry run pytest -v                                    # All tests
-poetry run pytest tests/test_compass_client_real.py -v  # Integration tests
+cd packages/bellweaver
+poetry run pytest -v                    # All tests
+poetry run pytest tests/ -v             # All tests in tests directory
 ```
 
 ### Code Quality
 
 ```bash
-cd backend
-poetry run black src tests    # Format
-poetry run flake8 src tests   # Lint
-poetry run mypy src          # Type check
+cd packages/bellweaver
+poetry run black bellweaver tests    # Format
+poetry run flake8 bellweaver tests   # Lint
+poetry run mypy bellweaver          # Type check
 ```
 
 ## Environment Configuration
 
-Required environment variables (in `backend/.env`):
+Required environment variables (in project root `.env`):
 
 ```bash
 # Compass credentials
@@ -185,7 +184,7 @@ CLAUDE_API_KEY=sk-ant-xxxxx
 BELLWEAVER_ENCRYPTION_KEY=
 ```
 
-See `backend/.env.example` for full template.
+See `.env.example` in the project root for full template.
 
 ## Development Roadmap
 
