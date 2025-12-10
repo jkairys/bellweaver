@@ -15,7 +15,7 @@ from bellweaver.db.models import (
     Child as DBChild, Organisation as DBOrganisation, 
     ChildOrganisation, CommunicationChannel as DBChannel
 )
-from compass_client import CompassUser, CompassEvent, CompassParser, create_client
+from compass_client import CompassClient, CompassUser, CompassEvent, CompassParser, create_client
 from bellweaver.models.family import (
     ChildCreate, ChildUpdate, Child as ChildResponse,
     OrganisationCreate, Organisation as OrganisationResponse,
@@ -26,7 +26,7 @@ from bellweaver.models.family import (
 from bellweaver.db.credentials import CredentialManager
 import uuid
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Create blueprint for user-related routes
 user_bp = Blueprint("users", __name__, url_prefix="/api/user")
@@ -264,8 +264,8 @@ def create_child():
             date_of_birth=child_data.date_of_birth,
             gender=child_data.gender,
             interests=child_data.interests,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc)
         )
 
         db.add(child)
@@ -376,7 +376,7 @@ def update_child(child_id: str):
         child.date_of_birth = update_data.date_of_birth
         child.gender = update_data.gender
         child.interests = update_data.interests
-        child.updated_at = datetime.utcnow()
+        child.updated_at = datetime.now(timezone.utc)
 
         db.commit()
         db.refresh(child)
@@ -458,8 +458,8 @@ def create_organisation():
             type=org_data.type.value,
             address=org_data.address,
             contact_info=org_data.contact_info,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc)
         )
 
         db.add(org)
@@ -580,7 +580,7 @@ def update_organisation(org_id: str):
         org.type = update_data.type.value
         org.address = update_data.address
         org.contact_info = update_data.contact_info
-        org.updated_at = datetime.utcnow()
+        org.updated_at = datetime.now(timezone.utc)
 
         db.commit()
         db.refresh(org)
@@ -829,9 +829,9 @@ def create_channel(org_id: str):
             if not (username and password and base_url):
                 raise ValidationError("Username, password, and base_url required for Compass", "INVALID_CREDENTIALS")
                 
-            # Validate credentials with Compass (always use real mode for auth)
+            # Validate credentials with Compass (always use real HTTP client for auth validation)
             try:
-                client = create_client(base_url=base_url, username=username, password=password, mode="real")
+                client = CompassClient(base_url=base_url, username=username, password=password)
                 client.login()
                 # If login successful, we proceed
             except Exception as e:
@@ -859,8 +859,8 @@ def create_channel(org_id: str):
             credential_source=credential_source,
             config=channel_data.config,
             is_active=channel_data.is_active,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc)
         )
         
         db.add(channel)
@@ -983,9 +983,9 @@ def update_channel(channel_id: str):
             if not (username and password and base_url):
                 raise ValidationError("Username, password, and base_url required for Compass", "INVALID_CREDENTIALS")
                 
-            # Validate credentials with Compass (always use real mode for auth)
+            # Validate credentials with Compass (always use real HTTP client for auth validation)
             try:
-                client = create_client(base_url=base_url, username=username, password=password, mode="real")
+                client = CompassClient(base_url=base_url, username=username, password=password)
                 client.login()
             except Exception as e:
                 raise ValidationError(f"Compass authentication failed: {str(e)}", "AUTH_FAILED")
@@ -1012,7 +1012,7 @@ def update_channel(channel_id: str):
             channel.config = update_data.config
             
         channel.is_active = update_data.is_active
-        channel.updated_at = datetime.utcnow()
+        channel.updated_at = datetime.now(timezone.utc)
         
         db.commit()
         db.refresh(channel)

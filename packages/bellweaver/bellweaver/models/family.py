@@ -7,7 +7,7 @@ communication channels, and their associations.
 
 from datetime import date, datetime
 from typing import Optional, List
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from enum import Enum
 
 
@@ -122,8 +122,7 @@ class Child(ChildBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class Organisation(OrganisationBase):
@@ -133,8 +132,7 @@ class Organisation(OrganisationBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CommunicationChannel(ChannelBase):
@@ -148,8 +146,7 @@ class CommunicationChannel(ChannelBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Detail models (with nested relationships)
