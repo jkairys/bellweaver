@@ -88,16 +88,16 @@
 
 ### Implementation for User Story 2
 
-- [ ] T037 [P] [US2] Create mock_validator.py in `packages/compass-client/compass_client/mock_validator.py` with load_and_validate_mock_data() function
-- [ ] T038 [P] [US2] Implement validate_mock_data_schema() function in mock_validator.py to validate all mock files
-- [ ] T039 [US2] Create MockDataValidationError exception in mock_validator.py
-- [ ] T040 [US2] Create startup.py in `packages/bellweaver/bellweaver/startup.py` with validate_mock_data_startup() function
-- [ ] T041 [US2] Implement startup_checks() function in startup.py to run validation based on compass_mode
-- [ ] T042 [US2] Create StartupValidationError exception in startup.py
-- [ ] T043 [US2] Integrate startup validation into Flask app factory in `packages/bellweaver/bellweaver/api/__init__.py`
-- [ ] T044 [US2] Update test fixtures in `packages/bellweaver/tests/conftest.py` to set COMPASS_MODE=mock
-- [ ] T045 [US2] Update bellweaver test workflow in `.github/workflows/test-bellweaver.yml` to set COMPASS_MODE=mock
-- [ ] T046 [US2] Configure path filters in test-bellweaver.yml: packages/bellweaver/** and packages/compass-client/**
+- [X] T037 [P] [US2] Create mock_validator.py in `packages/compass-client/compass_client/mock_validator.py` with load_and_validate_mock_data() function
+- [X] T038 [P] [US2] Implement validate_mock_data_schema() function in mock_validator.py to validate all mock files
+- [X] T039 [US2] Create MockDataValidationError exception in mock_validator.py
+- [X] T040 [US2] Create startup.py in `packages/bellweaver/bellweaver/startup.py` with validate_mock_data_startup() function
+- [X] T041 [US2] Implement startup_checks() function in startup.py to run validation based on compass_mode
+- [X] T042 [US2] Create StartupValidationError exception in startup.py
+- [X] T043 [US2] Integrate startup validation into Flask app factory in `packages/bellweaver/bellweaver/api/__init__.py`
+- [X] T044 [US2] Update test fixtures in `packages/bellweaver/tests/conftest.py` to set COMPASS_MODE=mock
+- [X] T045 [US2] Update bellweaver test workflow in `.github/workflows/test-bellweaver.yml` to set COMPASS_MODE=mock
+- [X] T046 [US2] Configure path filters in test-bellweaver.yml: packages/bellweaver/** and packages/compass-client/**
 - [ ] T047 [US2] Test CI pipeline: Create PR and verify bellweaver tests run with mock mode in GitHub Actions
 - [ ] T048 [US2] Verify zero authentication failures in CI logs
 
