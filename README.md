@@ -144,27 +144,38 @@ bellweaver/                     # Project root
 
 Get started in 5 minutes! For full details, see **[docs/quick-start.md](docs/quick-start.md)**.
 
-### Zero to Running in 5 Commands
+### Zero to Running in 3 Commands
 
 ```bash
-# 1. Clone and checkout branch
+# 1. Clone the repository
 git clone https://github.com/jkairys/bellweaver.git && cd bellweaver
-git checkout 002-compass-api-decoupling # Replace with your feature branch
 
-# 2. Install compass-client
-cd packages/compass-client && poetry install --with dev
+# 2. Configure environment
+cp .env.example .env  # Edit .env if needed, defaults to mock mode
 
-# 3. Install bellweaver
-cd ../bellweaver && poetry install --with dev
-
-# 4. Configure mock mode (create .env from .env.example)
-cd ../.. && cp .env.example .env && echo "COMPASS_MODE=mock" >> .env
-
-# 5. Run tests to verify
-cd packages/bellweaver && poetry run pytest -v
+# 3. Install all dependencies and run tests
+task setup && task test
 ```
 
 **Expected result**: All tests pass, you're ready to develop! 🚀
+
+<details>
+<summary>Manual installation (without Task)</summary>
+
+```bash
+# Install compass-client
+cd packages/compass-client && poetry install --with dev
+
+# Install bellweaver
+cd ../bellweaver && poetry install --with dev
+
+# Install frontend
+cd ../../frontend && npm install
+
+# Run tests
+cd ../packages/bellweaver && poetry run pytest -v
+```
+</details>
 
 ## Architecture Overview
 
@@ -204,38 +215,75 @@ cd packages/bellweaver && poetry run pytest -v
 
 For detailed usage instructions, including running in mock/real modes, refreshing mock data, and testing, please refer to the **[Quick Start Guide](docs/quick-start.md)**.
 
-### CLI Mode (from `packages/bellweaver/`)
+### Development Mode
+
+Start both frontend and backend development servers:
 
 ```bash
-# Sync data from Compass (runs in mock mode by default if configured)
-poetry run bellweaver compass sync
-
-# Manage mock data (validate, update from real API)
-poetry run bellweaver mock --help
+task dev
 ```
 
-### Web UI
+This starts:
+- Frontend dev server at `http://localhost:5173`
+- Backend API server at `http://localhost:5000`
 
-Start the Flask API server (from `packages/bellweaver/`):
+### CLI Mode
 
 ```bash
+# Using Poetry directly (from packages/bellweaver/)
+cd packages/bellweaver
+poetry run bellweaver compass sync    # Sync data from Compass
+poetry run bellweaver mock --help     # Manage mock data
+```
+
+### API Server Only
+
+```bash
+# Using Task (from project root)
+task backend:serve
+
+# Or using Poetry (from packages/bellweaver/)
+cd packages/bellweaver
 poetry run bellweaver api serve
 ```
-
-Then access the API at `http://localhost:5000` (frontend runs separately, see Quick Start).
 
 ## Development
 
 For a complete development workflow, including local setup, testing, and debugging, see the **[Quick Start Guide](docs/quick-start.md)**.
 
-### Running Tests (from `packages/bellweaver/` or `packages/compass-client/`)
+### Running Tests
+
+```bash
+# Using Task (from project root) - Recommended
+task test              # Run all tests across all packages
+task test:unit         # Run unit tests only (excludes integration tests)
+
+# Or run tests for specific packages
+task backend:bellweaver:test
+task backend:compass-client:test
+```
+
+<details>
+<summary>Manual testing with Poetry</summary>
 
 ```bash
 # Run tests for bellweaver (uses mock compass-client by default)
 cd packages/bellweaver && poetry run pytest
 
 # Run tests for compass-client
-cd packages/compass-client && poetry run pytest
+cd packages/compass-client && poetry run pytest -m "not integration"
+
+# Run integration tests (requires real Compass credentials)
+cd packages/compass-client && poetry run pytest -m "integration"
+```
+</details>
+
+### Linting and Formatting
+
+```bash
+# Using Task (from project root) - Recommended
+task format            # Auto-fix formatting issues (ruff --fix, black)
+task lint              # Check for linting issues (ruff, flake8, mypy)
 ```
 
 ## Key Design Decisions
