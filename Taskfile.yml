@@ -1,0 +1,59 @@
+version: '3'
+
+includes:
+  frontend:
+    taskfile: ./frontend/Taskfile.yml
+    dir: ./frontend
+  backend:
+    taskfile: ./packages/Taskfile.yml
+    dir: ./packages
+
+tasks:
+  setup:
+    desc: Install all dependencies for frontend and backend
+    cmds:
+      - task: frontend:install
+      - task: backend:install
+
+  dev:
+    desc: Start both frontend and backend development servers
+    deps:
+      - frontend:dev
+      - backend:serve
+
+  test:
+    desc: Run all tests across all packages
+    cmds:
+      - task: backend:test
+
+  test:unit:
+    desc: Run unit tests across all packages
+    cmds:
+      - task: backend:test:unit
+
+  lint:
+    desc: Run all linters across all packages
+    cmds:
+      - task: backend:lint
+
+  format:
+    desc: Run all formatters with auto-fix across all packages
+    cmds:
+      - task: backend:format
+
+  clean:
+    desc: Clean build artifacts and caches
+    cmds:
+      - rm -rf frontend/node_modules
+      - rm -rf frontend/dist
+      - rm -rf frontend/.vite
+      - find packages -type d -name "__pycache__" -exec rm -rf {} +
+      - find packages -type d -name ".pytest_cache" -exec rm -rf {} +
+      - find packages -type d -name ".mypy_cache" -exec rm -rf {} +
+      - find packages -type d -name ".ruff_cache" -exec rm -rf {} +
+      - find packages -type d -name "*.egg-info" -exec rm -rf {} +
+
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list

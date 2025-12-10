@@ -1,0 +1,51 @@
+version: '3'
+
+includes:
+  bellweaver:
+    taskfile: ./bellweaver/Taskfile.yml
+    dir: ./bellweaver
+  compass-client:
+    taskfile: ./compass-client/Taskfile.yml
+    dir: ./compass-client
+
+tasks:
+  install:
+    desc: Install all backend package dependencies
+    cmds:
+      - task: compass-client:install
+      - task: bellweaver:install
+
+  test:
+    desc: Run tests across all backend packages
+    cmds:
+      - task: compass-client:test
+      - task: bellweaver:test
+
+  test:unit:
+    desc: Run unit tests across all backend packages
+    cmds:
+      - task: compass-client:test:unit
+      - task: bellweaver:test:unit
+
+  lint:
+    desc: Run linters across all backend packages
+    cmds:
+      - task: compass-client:lint
+      - task: bellweaver:lint
+
+  format:
+    desc: Run formatters across all backend packages
+    cmds:
+      - task: compass-client:format
+      - task: bellweaver:format
+
+  serve:
+    desc: Start bellweaver API development server
+    cmds:
+      - task: bellweaver:serve
+
+  clean:
+    desc: Clean all backend packages
+    cmds:
+      - task: compass-client:clean
+      - task: bellweaver:clean

@@ -1,0 +1,24 @@
+version: '3'
+
+tasks:
+  install:
+    desc: Install frontend dependencies
+    cmds:
+      - npm install
+
+  dev:
+    desc: Start Vite development server
+    cmds:
+      - npm run dev
+
+  build:
+    desc: Build frontend for production
+    cmds:
+      - npm run build
+
+  clean:
+    desc: Clean build artifacts and node_modules
+    cmds:
+      - rm -rf node_modules
+      - rm -rf dist
+      - rm -rf .vite
