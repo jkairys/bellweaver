@@ -6,7 +6,7 @@ the application can function properly before handling requests.
 """
 
 import os
-from pathlib import Path # Add Path import
+from pathlib import Path  # Add Path import
 from typing import Optional
 
 from compass_client.mock_validator import (
@@ -57,8 +57,6 @@ def validate_mock_data_startup() -> None:
     # Explicitly define mock data path for Docker environment
     mock_data_path = Path("/app/packages/compass-client/data/mock")
     try:
-        validate_mock_data_schema(mock_data_path) # Pass the explicit path
+        validate_mock_data_schema(mock_data_path)  # Pass the explicit path
     except MockDataValidationError as e:
-        raise StartupValidationError(
-            f"Mock data validation failed: {e}"
-        ) from e
+        raise StartupValidationError(f"Mock data validation failed: {e}") from e

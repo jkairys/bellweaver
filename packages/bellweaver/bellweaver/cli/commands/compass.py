@@ -120,7 +120,7 @@ def sync_calendar_events(
             typer.echo(f"  Date range: {start_date_str} to {end_date_str}")
             typer.echo(f"  Limit: {limit} events")
             typer.echo("")
-            
+
             # Create client (real or mock based on COMPASS_MODE env var)
             compass_mode = os.getenv("COMPASS_MODE", "real")
             typer.echo(f"  Mode: {compass_mode}")
@@ -164,12 +164,12 @@ def sync_calendar_events(
 
             # On conflict, update the payload, batch_id, and updated_at
             stmt = stmt.on_conflict_do_update(
-                index_elements=['adapter_id', 'method_name', 'external_id'],
+                index_elements=["adapter_id", "method_name", "external_id"],
                 set_={
-                    'payload': stmt.excluded.payload,
-                    'batch_id': stmt.excluded.batch_id,
-                    'updated_at': datetime.now(timezone.utc),
-                }
+                    "payload": stmt.excluded.payload,
+                    "batch_id": stmt.excluded.batch_id,
+                    "updated_at": datetime.now(timezone.utc),
+                },
             )
 
             db.execute(stmt)
@@ -239,12 +239,12 @@ def sync_calendar_events(
                 # On conflict, update the payload, batch_id, and updated_at
                 # but preserve the original created_at
                 stmt = stmt.on_conflict_do_update(
-                    index_elements=['adapter_id', 'method_name', 'external_id'],
+                    index_elements=["adapter_id", "method_name", "external_id"],
                     set_={
-                        'payload': stmt.excluded.payload,
-                        'batch_id': stmt.excluded.batch_id,
-                        'updated_at': datetime.now(timezone.utc),
-                    }
+                        "payload": stmt.excluded.payload,
+                        "batch_id": stmt.excluded.batch_id,
+                        "updated_at": datetime.now(timezone.utc),
+                    },
                 )
 
                 db.execute(stmt)
@@ -269,7 +269,7 @@ def sync_calendar_events(
             typer.secho("✓ Success! Data synced from Compass.", fg=typer.colors.GREEN, bold=True)
             typer.echo("")
             typer.echo("Summary:")
-            typer.echo(f"  User details stored: 1")
+            typer.echo("  User details stored: 1")
             typer.echo(f"  User batch ID: {user_batch.id}")
             typer.echo(f"  Calendar events fetched: {len(events)}")
             typer.echo(f"    - New events: {inserted_count}")
@@ -277,7 +277,7 @@ def sync_calendar_events(
             typer.echo(f"  Events batch ID: {events_batch.id}")
             typer.echo(f"  Date range: {start_date_str} to {end_date_str}")
             if incremental:
-                typer.echo(f"  Sync mode: Incremental")
+                typer.echo("  Sync mode: Incremental")
 
         finally:
             db.close()
@@ -339,11 +339,7 @@ def process_events():
 
             # Get all payloads from this batch
             typer.echo("  Retrieving API payloads from batch...")
-            payloads = (
-                db.query(ApiPayload)
-                .filter_by(batch_id=latest_batch.id)
-                .all()
-            )
+            payloads = db.query(ApiPayload).filter_by(batch_id=latest_batch.id).all()
 
             typer.secho(f"  ✓ Found {len(payloads)} payloads", fg=typer.colors.GREEN)
             typer.echo("")
@@ -364,11 +360,7 @@ def process_events():
                     event_data = compass_event_to_event(compass_event)
 
                     # Check if event already exists for this payload
-                    existing_event = (
-                        db.query(Event)
-                        .filter_by(api_payload_id=payload.id)
-                        .first()
-                    )
+                    existing_event = db.query(Event).filter_by(api_payload_id=payload.id).first()
 
                     if existing_event:
                         # Update existing event

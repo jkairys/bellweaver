@@ -43,22 +43,28 @@ def migrate(db_path: str = "backend/data/bellweaver.db"):
             return True
 
         print("  Adding external_id column...")
-        cursor.execute("""
+        cursor.execute(
+            """
             ALTER TABLE api_payloads
             ADD COLUMN external_id VARCHAR(255)
-        """)
+        """
+        )
 
         print("  Adding updated_at column...")
-        cursor.execute("""
+        cursor.execute(
+            """
             ALTER TABLE api_payloads
             ADD COLUMN updated_at DATETIME
-        """)
+        """
+        )
 
         # Populate external_id for existing records
         print("  Populating external_id for existing records...")
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT id, adapter_id, method_name, payload FROM api_payloads
-        """)
+        """
+        )
 
         rows = cursor.fetchall()
         for row_id, adapter_id, method_name, payload_json in rows:
@@ -87,21 +93,23 @@ def migrate(db_path: str = "backend/data/bellweaver.db"):
                 external_id = hashlib.sha256(payload_str.encode()).hexdigest()[:32]
 
             cursor.execute(
-                "UPDATE api_payloads SET external_id = ? WHERE id = ?",
-                (external_id, row_id)
+                "UPDATE api_payloads SET external_id = ? WHERE id = ?", (external_id, row_id)
             )
 
         # Set updated_at to created_at for existing records
         print("  Setting updated_at for existing records...")
-        cursor.execute("""
+        cursor.execute(
+            """
             UPDATE api_payloads
             SET updated_at = created_at
             WHERE updated_at IS NULL
-        """)
+        """
+        )
 
         # Make external_id NOT NULL after population
         print("  Creating new table with constraints...")
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE api_payloads_new (
                 id VARCHAR(36) PRIMARY KEY NOT NULL,
                 adapter_id VARCHAR(50) NOT NULL,
@@ -114,10 +122,12 @@ def migrate(db_path: str = "backend/data/bellweaver.db"):
                 FOREIGN KEY (batch_id) REFERENCES batches(id),
                 UNIQUE (adapter_id, method_name, external_id)
             )
-        """)
+        """
+        )
 
         print("  Copying data to new table (keeping most recent for duplicates)...")
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO api_payloads_new
             SELECT id, adapter_id, method_name, batch_id, external_id, payload, created_at, updated_at
             FROM (
@@ -129,7 +139,8 @@ def migrate(db_path: str = "backend/data/bellweaver.db"):
                 FROM api_payloads
             )
             WHERE rn = 1
-        """)
+        """
+        )
 
         print("  Replacing old table...")
         cursor.execute("DROP TABLE api_payloads")

@@ -63,7 +63,7 @@ def update_mock_data(
                 "COMPASS_BASE_URL, COMPASS_USERNAME, and COMPASS_PASSWORD "
                 "must be set in .env file"
             )
-            
+
         # Ensure base_url has https://
         if not base_url.startswith("http"):
             base_url = f"https://{base_url}"
@@ -87,7 +87,7 @@ def update_mock_data(
             days=days,
             limit=limit,
         )
-        
+
         # Ensure output directory exists
         output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -144,13 +144,13 @@ def validate_mock_data():
         user_data, events_data, version_info = load_and_validate_mock_data()
 
         typer.secho("✓ Mock data is valid!", fg=typer.colors.GREEN, bold=True)
-        typer.echo(f"\nUser Data:")
+        typer.echo("\nUser Data:")
         typer.echo(f"  Fields: {len(user_data)}")
 
-        typer.echo(f"\nCalendar Events:")
+        typer.echo("\nCalendar Events:")
         typer.echo(f"  Total events: {len(events_data)}")
 
-        typer.echo(f"\nSchema Version:")
+        typer.echo("\nSchema Version:")
         typer.echo(f"  Last updated: {version_info.get('last_updated', 'N/A')}")
         typer.echo(f"  Compass API version: {version_info.get('compass_api_version', 'N/A')}")
 

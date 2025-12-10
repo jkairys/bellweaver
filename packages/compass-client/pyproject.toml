@@ -23,6 +23,7 @@ pytest-cov = "^4.1.0"
 black = "^23.0.0"
 flake8 = "^6.0.0"
 mypy = "^1.0.0"
+ruff = "^0.14.8"
 
 [build-system]
 requires = ["poetry-core"]
@@ -45,3 +46,6 @@ addopts = "-v --tb=short"
 markers = [
     "integration: marks tests as integration tests requiring real API access (deselect with '-m \"not integration\"')",
 ]
+
+[tool.flake8]
+ignore = ["E501"]

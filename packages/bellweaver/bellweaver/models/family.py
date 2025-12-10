@@ -48,7 +48,7 @@ class ChildBase(BaseModel):
     gender: Optional[str] = Field(None, max_length=50)
     interests: Optional[str] = None
 
-    @field_validator('date_of_birth')
+    @field_validator("date_of_birth")
     @classmethod
     def validate_date_not_future(cls, v: date) -> date:
         """Validate that date_of_birth is not in the future."""
@@ -77,11 +77,13 @@ class ChannelBase(BaseModel):
 # Create models (for POST requests)
 class ChildCreate(ChildBase):
     """Model for creating a new child."""
+
     pass
 
 
 class OrganisationCreate(OrganisationBase):
     """Model for creating a new organisation."""
+
     pass
 
 
@@ -89,19 +91,20 @@ class ChannelCreate(ChannelBase):
     """Model for creating a new communication channel."""
 
     credentials: Optional[dict] = Field(
-        None,
-        description="Optional credentials (username, password) for authenticated channels"
+        None, description="Optional credentials (username, password) for authenticated channels"
     )
 
 
 # Update models (for PUT requests)
 class ChildUpdate(ChildBase):
     """Model for updating a child."""
+
     pass
 
 
 class OrganisationUpdate(OrganisationBase):
     """Model for updating an organisation."""
+
     pass
 
 
@@ -109,8 +112,7 @@ class ChannelUpdate(ChannelBase):
     """Model for updating a communication channel."""
 
     credentials: Optional[dict] = Field(
-        None,
-        description="Optional credentials (username, password) for authenticated channels"
+        None, description="Optional credentials (username, password) for authenticated channels"
     )
 
 

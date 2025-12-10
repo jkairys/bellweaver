@@ -6,13 +6,12 @@ import os
 import tempfile
 import uuid
 from datetime import datetime
-from pathlib import Path
 
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from bellweaver.db.database import Base, init_db
+from bellweaver.db.database import Base
 from bellweaver.db.models import ApiPayload, Batch, Credential
 
 
@@ -498,11 +497,7 @@ class TestApiPayloadModel:
         temp_db.commit()
 
         # Query by created_at (should work due to index)
-        recent = (
-            temp_db.query(ApiPayload)
-            .order_by(ApiPayload.created_at.desc())
-            .first()
-        )
+        recent = temp_db.query(ApiPayload).order_by(ApiPayload.created_at.desc()).first()
         assert recent is not None
         assert recent.payload["index"] == 2  # Last created
 

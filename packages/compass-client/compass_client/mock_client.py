@@ -7,7 +7,7 @@ Returns realistic calendar events from committed mock data for development and t
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from .exceptions import CompassClientError
 
@@ -115,7 +115,7 @@ class CompassMockClient:
 
         Used when data/mock/compass_events.json doesn't exist.
         """
-        return [
+        fallback_data: List[Dict[str, Any]] = [
             {
                 "__type": "CalendarTransport:http://jdlf.com.au/ns/data/calendar",
                 "activityId": 1,
@@ -240,6 +240,7 @@ class CompassMockClient:
                 ],
             },
         ]
+        return fallback_data
 
     def _get_fallback_user(self) -> Dict[str, Any]:
         """
@@ -247,7 +248,7 @@ class CompassMockClient:
 
         Used when data/mock/compass_user.json doesn't exist.
         """
-        return {
+        fallback_data: Dict[str, Any] = {
             "__type": "UserDetailsBlob",
             "userId": 12345,
             "username": "jsmith",
@@ -282,6 +283,7 @@ class CompassMockClient:
             "userStatus": 1,
             "userSussiID": "12345",
         }
+        return fallback_data
 
     def login(self) -> bool:
         """Mock login - always succeeds and loads mock data."""

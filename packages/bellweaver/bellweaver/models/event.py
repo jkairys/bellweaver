@@ -46,9 +46,7 @@ class Event(BaseModel):
 
     # Additional useful fields
     organizer: Optional[str] = Field(None, description="Event organizer")
-    attendees: list[str] = Field(
-        default_factory=list, description="List of attendee names"
-    )
+    attendees: list[str] = Field(default_factory=list, description="List of attendee names")
     status: Optional[str] = Field(
         None, description="Event status (EventScheduled, EventCancelled, etc.)"
     )

@@ -103,10 +103,7 @@ class TestCompassClientAuthentication:
         with pytest.raises(CompassAuthenticationError) as exc_info:
             client.login()
 
-        assert (
-            "login failed" in str(exc_info.value).lower()
-            or "incorrect" in str(exc_info.value).lower()
-        )
+        assert ("login failed" in str(exc_info.value).lower() or "incorrect" in str(exc_info.value).lower())
 
 
 @pytest.mark.integration

@@ -43,6 +43,7 @@ if "sqlite" in DATABASE_URL:
         cursor.execute("PRAGMA foreign_keys=ON")
         cursor.close()
 
+
 # Session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

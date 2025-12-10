@@ -4,7 +4,7 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List, Optional
 
 from dotenv import load_dotenv
 
@@ -18,8 +18,12 @@ MOCK_DATA_DIR = Path(__file__).parent.parent / "data" / "mock"
 
 
 def fetch_real_data(
-    username: str, password: str, base_url: str, days: int = 30, limit: int = 100
-) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    username: Optional[str] = None,
+    password: Optional[str] = None,
+    base_url: Optional[str] = None,
+    days: int = 30,
+    limit: int = 100,
+) -> tuple[Dict[str, Any], List[Dict[str, Any]]]:
     """Fetch user details and events from real Compass API.
 
     Args:
@@ -35,6 +39,13 @@ def fetch_real_data(
     Raises:
         Exception: If authentication fails or API call fails
     """
+    # Ensure credentials are not None before passing to CompassClient
+    if username is None or password is None or base_url is None:
+        raise ValueError(
+            "CompassClient requires non-None username, password, and base_url."
+            " Ensure these are provided as arguments or set in environment variables."
+        )
+
     client = CompassClient(username=username, password=password, base_url=base_url)
 
     # Authenticate
@@ -161,7 +172,10 @@ def update_schema_version() -> None:
 
 
 def refresh_mock_data(
-    username: str = None, password: str = None, base_url: str = None, skip_sanitize: bool = False
+    username: Optional[str] = None,
+    password: Optional[str] = None,
+    base_url: Optional[str] = None,
+    skip_sanitize: bool = False,
 ) -> None:
     """Refresh mock data by fetching fresh samples from real Compass API.
 
@@ -213,7 +227,6 @@ def refresh_mock_data(
         # Update schema version
         print("\nUpdating schema version...")
         update_schema_version()
-
         print("\n✅ Mock data refresh completed successfully!")
         print(f"Mock data location: {MOCK_DATA_DIR}")
         print("Next steps: Commit the updated mock data files to your repository")

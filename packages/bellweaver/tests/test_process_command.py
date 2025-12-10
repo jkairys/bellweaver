@@ -1,7 +1,5 @@
 """Tests for the compass process command."""
 
-import json
-from datetime import datetime, timezone
 
 import pytest
 from typer.testing import CliRunner
@@ -98,7 +96,9 @@ def batch_with_events(db_session, sample_compass_event_payload):
     payload2_data = sample_compass_event_payload.copy()
     payload2_data["title"] = "Second Test Event"
     payload2_data["guid"] = "test-guid-456"
-    payload2_data["instanceId"] = "test-instance-456"  # Different instanceId to avoid duplicate external_id
+    payload2_data[
+        "instanceId"
+    ] = "test-instance-456"  # Different instanceId to avoid duplicate external_id
     payload2 = ApiPayload(
         adapter_id="compass",
         method_name="get_calendar_events",
@@ -155,9 +155,7 @@ class TestProcessCommand:
         assert event.description == "Test event description"
         assert event.all_day is False
 
-    def test_process_command_updates_existing_events(
-        self, runner, db_session, batch_with_events
-    ):
+    def test_process_command_updates_existing_events(self, runner, db_session, batch_with_events):
         """Test that reprocessing updates existing events."""
         # First processing
         result = runner.invoke(app, ["compass", "process"])
@@ -168,7 +166,6 @@ class TestProcessCommand:
         initial_events = db_session.query(Event).order_by(Event.title).all()
         initial_count = len(initial_events)
         initial_updated_at = initial_events[0].updated_at
-        initial_title = initial_events[0].title
 
         # Modify the event title in database to simulate a change
         first_event = db_session.query(Event).order_by(Event.title).first()
@@ -186,7 +183,9 @@ class TestProcessCommand:
         assert len(final_events) == initial_count
 
         # Find the event that was modified - it should be back to original title
-        restored_events = [e for e in final_events if e.title in ["Test Event", "Second Test Event"]]
+        restored_events = [
+            e for e in final_events if e.title in ["Test Event", "Second Test Event"]
+        ]
         assert len(restored_events) == 2  # Both should be restored
         assert any(e.updated_at > initial_updated_at for e in restored_events)
 
@@ -297,9 +296,7 @@ class TestProcessCommand:
         assert len(events) == 1
         assert events[0].title == "New Event"
 
-    def test_process_command_handles_invalid_payload(
-        self, runner, db_session, batch_with_events
-    ):
+    def test_process_command_handles_invalid_payload(self, runner, db_session, batch_with_events):
         """Test that process command handles invalid payloads gracefully."""
         # Add an invalid payload to the batch
         invalid_payload_data = {"invalid": "data", "missing": "required_fields"}
