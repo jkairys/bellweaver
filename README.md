@@ -40,53 +40,50 @@ The MVP focuses on **Compass only** for local development:
 
 ```
 bellweaver/
-├── backend/                      # Backend Python application
-│   ├── bellweaver/                      # Main Python package
-│   │   ├── __init__.py
-│   │   ├── cli.py               # CLI entry point
-│   │   ├── app.py               # Flask app entry point
-│   │   │
-│   │   ├── adapters/            # Calendar source adapters
-│   │   │   ├── __init__.py
-│   │   │   ├── compass.py       # Real Compass API client
-│   │   │   └── compass_mock.py  # Mock Compass for testing
-│   │   │
-│   │   ├── models/              # Data models
-│   │   │   └── config.py        # Configuration models
-│   │   │
-│   │   ├── db/                  # Database layer
-│   │   │   ├── __init__.py
-│   │   │   ├── database.py      # SQLite connection & schema
-│   │   │   ├── credentials.py   # Encrypted credential storage
-│   │   │   └── models.py        # SQLAlchemy ORM models
-│   │   │
-│   │   ├── filtering/           # Event filtering & enrichment
-│   │   │   ├── __init__.py
-│   │   │   └── llm_filter.py    # Claude API filtering logic
-│   │   │
-│   │   └── api/                 # REST API endpoints
-│   │       ├── __init__.py
-│   │       ├── routes.py        # Flask routes
-│   │       └── schemas.py       # Request/response schemas
+├── packages/                     # Python packages (monorepo structure)
+│   ├── compass-client/          # Compass API client library
+│   │   ├── compass_client/
+│   │   │   ├── adapters/        # API client implementations
+│   │   │   ├── models/          # Data models
+│   │   │   └── parsers/         # Data validation layer
+│   │   ├── tests/
+│   │   ├── pyproject.toml
+│   │   └── README.md
 │   │
-│   ├── tests/                    # Unit tests
-│   │   ├── __init__.py
-│   │   ├── test_compass_adapter.py
-│   │   ├── test_compass_mock.py
-│   │   └── test_filtering.py
-│   │
-│   ├── data/                     # Data directory (gitignored)
-│   │   └── .gitkeep
-│   │
-│   ├── pyproject.toml           # Poetry configuration
-│   └── README.md                # Backend setup instructions
+│   └── bellweaver/              # Main application
+│       ├── bellweaver/          # Main Python package
+│       │   ├── __init__.py
+│       │   ├── cli/             # CLI interface
+│       │   │   ├── main.py
+│       │   │   └── commands/
+│       │   │
+│       │   ├── db/              # Database layer
+│       │   │   ├── database.py      # SQLAlchemy connection & schema
+│       │   │   ├── credentials.py   # Encrypted credential storage
+│       │   │   └── models.py        # ORM models
+│       │   │
+│       │   ├── filtering/       # Event filtering & enrichment
+│       │   │   └── llm_filter.py    # Claude API filtering logic
+│       │   │
+│       │   ├── models/          # Pydantic/dataclass models
+│       │   │   ├── compass.py
+│       │   │   └── config.py
+│       │   │
+│       │   └── api/             # REST API (Flask)
+│       │       ├── __init__.py  # Flask app factory
+│       │       └── routes.py    # Route handlers
+│       │
+│       ├── tests/               # Unit & integration tests
+│       ├── data/                # Data directory (gitignored)
+│       ├── pyproject.toml       # Poetry configuration
+│       └── README.md            # Package setup instructions
 │
-├── frontend/                     # Frontend application (TBD)
+├── frontend/                    # Frontend React application
 │   ├── src/                     # Source files
 │   ├── public/                  # Static assets
 │   └── README.md                # Frontend setup instructions
 │
-├── docs/                         # Project documentation
+├── docs/                        # Project documentation
 │   ├── index.md                 # Documentation index
 │   ├── quick-start.md           # Quick start guide
 │   └── architecture.md          # Technical design
@@ -123,7 +120,7 @@ docker exec -it bellweaver bellweaver compass sync
 
 **Key features:**
 - Single container serves both frontend and backend
-- Database persists in `backend/data/` (mounted volume)
+- Database persists in `packages/bellweaver/data/` (mounted volume)
 - Same environment and database used whether running in Docker or locally
 - No data migration needed when switching between Docker and local development
 
@@ -148,7 +145,7 @@ cd bellweaver
 2. **Set up the backend**:
 
 ```bash
-cd backend
+cd packages/bellweaver
 poetry install --with dev
 ```
 
@@ -186,7 +183,7 @@ Run frontend and backend separately with hot reload:
 
 ```bash
 # Terminal 1: Start backend API
-cd backend
+cd packages/bellweaver
 poetry run bellweaver api serve --debug
 
 # Terminal 2: Start frontend dev server
@@ -202,47 +199,38 @@ Access:
 
 ### CLI Mode
 
-**Full end-to-end sync** (fetch + filter):
+Run CLI commands from `packages/bellweaver/` directory:
+
+**Sync from Compass**:
 
 ```bash
-poetry run bellweaver --full
+cd packages/bellweaver
+poetry run bellweaver compass sync
 ```
 
-**Individual steps**:
+**Manage mock data** (for testing without credentials):
 
 ```bash
-# Just fetch from Compass (or mock)
-poetry run bellweaver --fetch
-
-# Filter cached events
-poetry run bellweaver --filter
-
-# Show filtered results
-poetry run bellweaver --show-filtered
+cd packages/bellweaver
+poetry run bellweaver mock update
 ```
 
-**Configuration**:
+**View CLI help**:
 
 ```bash
-# Set Compass credentials (encrypted in SQLite)
-poetry run bellweaver --set-credentials compass --username your@email.com --password yourpassword
-
-# Configure child profile
-poetry run bellweaver --set-config \
-  --child-name "Sophia" \
-  --school "St Mary's Primary" \
-  --year-level "Year 3" \
-  --class "3A" \
-  --interests "athletics,music" \
-  --filter-rules "Include excursions and sports. Exclude assemblies."
+cd packages/bellweaver
+poetry run bellweaver --help
+poetry run bellweaver compass --help
+poetry run bellweaver api --help
 ```
 
 ### Web UI
 
-**Start the Flask server**:
+**Start the Flask API server** (from `packages/bellweaver/`):
 
 ```bash
-poetry run flask run
+cd packages/bellweaver
+poetry run bellweaver api serve
 ```
 
 Then open <http://localhost:5000> in your browser.
@@ -256,28 +244,28 @@ Features:
 
 ## Development
 
-All development commands should be run from the `backend/` directory:
+All development commands should be run from the `packages/bellweaver/` directory:
 
 ### Running Tests
 
 ```bash
-cd backend
+cd packages/bellweaver
 poetry run pytest
 ```
 
 ### Code Quality
 
 ```bash
-cd backend
-poetry run black src tests
-poetry run flake8 src tests
-poetry run mypy src
+cd packages/bellweaver
+poetry run black bellweaver tests
+poetry run flake8 bellweaver tests
+poetry run mypy bellweaver
 ```
 
 ### Development Mode
 
 ```bash
-cd backend
+cd packages/bellweaver
 export FLASK_ENV=development
 poetry run flask run --debug
 ```
@@ -348,7 +336,7 @@ poetry cache clear . --all
 ### Database Reset
 
 ```bash
-rm data/bellweaver.db
+rm packages/bellweaver/data/bellweaver.db
 ```
 
 ## Contributing

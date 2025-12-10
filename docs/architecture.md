@@ -57,7 +57,7 @@ Bellweaver is a school calendar event aggregation and filtering tool. The MVP fo
 
 ### 1. Compass Client (HTTP-based)
 
-**File:** `backend/bellweaver/adapters/compass.py`
+**File:** `packages/bellweaver/bellweaver/adapters/compass.py`
 
 **Features:**
 
@@ -86,7 +86,7 @@ Bellweaver is a school calendar event aggregation and filtering tool. The MVP fo
 
 ### 2. Mock Client
 
-**File:** `backend/bellweaver/adapters/compass_mock.py`
+**File:** `packages/bellweaver/bellweaver/adapters/compass_mock.py`
 
 **Features:**
 
@@ -104,7 +104,7 @@ Bellweaver is a school calendar event aggregation and filtering tool. The MVP fo
 
 ### 3. Compass Parser
 
-**File:** `backend/bellweaver/parsers/compass.py`
+**File:** `packages/bellweaver/bellweaver/parsers/compass.py`
 
 **Features:**
 
@@ -148,7 +148,7 @@ valid_events, errors = CompassParser.parse_safe(CompassEvent, raw_events_list)
 
 ### 4. LLM Filter
 
-**File:** `backend/bellweaver/filtering/llm_filter.py`
+**File:** `packages/bellweaver/bellweaver/filtering/llm_filter.py`
 
 **Features:**
 
@@ -161,7 +161,7 @@ valid_events, errors = CompassParser.parse_safe(CompassEvent, raw_events_list)
 
 ### 5. Credential Manager
 
-**File:** `backend/bellweaver/db/credentials.py`
+**File:** `packages/bellweaver/bellweaver/db/credentials.py`
 
 **Features:**
 

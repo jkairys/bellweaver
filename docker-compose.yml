@@ -11,7 +11,7 @@ services:
       - DATABASE_PATH=/app/data/bellweaver.db
     volumes:
       # Persist database outside container
-      - ./backend/data:/app/data
+      - ./packages/bellweaver/data:/app/data
     restart: unless-stopped
     env_file: .env
     healthcheck:

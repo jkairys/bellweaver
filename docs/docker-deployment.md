@@ -44,10 +44,10 @@ COMPASS_BASE_URL=https://your-school.compass.education
 The database directory is automatically created, but you can verify it exists:
 
 ```bash
-mkdir -p backend/data
+mkdir -p packages/bellweaver/data
 ```
 
-**Important:** The `backend/data` directory is mounted as a volume in the container, so the SQLite database (`bellweaver.db`) is shared between Docker and local environments. This means:
+**Important:** The `packages/bellweaver/data` directory is mounted as a volume in the container, so the SQLite database (`bellweaver.db`) is shared between Docker and local environments. This means:
 - Data persists when the container is stopped/restarted
 - The same database is used whether running in Docker or locally
 - No data migration needed when switching between Docker and local development
@@ -65,7 +65,7 @@ docker-compose up -d
 This will:
 - Build the multi-stage Docker image (frontend + backend)
 - Start the container in detached mode
-- Mount `backend/data` for database persistence
+- Mount `packages/bellweaver/data` for database persistence
 - Load environment variables from `.env`
 - Expose the application on port 5000
 
@@ -81,11 +81,11 @@ docker exec -it bellweaver bellweaver compass sync
 Alternatively, you can run the sync command locally (outside Docker) and it will use the same database:
 
 ```bash
-cd backend
+cd packages/bellweaver
 poetry run bellweaver compass sync
 ```
 
-Both approaches write to the same `backend/data/bellweaver.db` file.
+Both approaches write to the same `packages/bellweaver/data/bellweaver.db` file.
 
 ### 5. Access the application
 
@@ -105,10 +105,10 @@ docker-compose logs -f
 docker-compose down
 ```
 
-**Note:** This stops and removes the container but preserves the database in `backend/data/`. To also remove the database, manually delete the data directory:
+**Note:** This stops and removes the container but preserves the database in `packages/bellweaver/data/`. To also remove the database, manually delete the data directory:
 
 ```bash
-rm -rf backend/data/
+rm -rf packages/bellweaver/data/
 ```
 
 ## Manual Docker Commands
@@ -127,7 +127,7 @@ docker build -t bellweaver:latest .
 docker run -d \
   --name bellweaver \
   -p 5000:5000 \
-  -v $(pwd)/backend/data:/app/data \
+  -v $(pwd)/packages/bellweaver/data:/app/data \
   --env-file .env \
   bellweaver:latest
 ```
@@ -138,7 +138,7 @@ docker run -d \
 docker run -d \
   --name bellweaver \
   -p 5000:5000 \
-  -v $(pwd)/backend/data:/app/data \
+  -v $(pwd)/packages/bellweaver/data:/app/data \
   -e COMPASS_USERNAME=your_username \
   -e COMPASS_PASSWORD=your_password \
   -e COMPASS_BASE_URL=https://your-school.compass.education \
@@ -165,7 +165,7 @@ docker stop bellweaver
 docker rm bellweaver
 ```
 
-The database persists in `backend/data/` even after container removal.
+The database persists in `packages/bellweaver/data/` even after container removal.
 
 ## API Routes
 
@@ -220,17 +220,17 @@ Check that the data directory is mounted correctly:
 docker inspect bellweaver | grep -A 10 Mounts
 ```
 
-You should see `/app/data` mounted to your local `./backend/data` directory.
+You should see `/app/data` mounted to your local `./packages/bellweaver/data` directory.
 
 ### Data synced in Docker not visible locally (or vice versa)
 
 Both environments should share the same database. Verify:
 
-1. Check that docker-compose.yml mounts `./backend/data:/app/data`
+1. Check that docker-compose.yml mounts `./packages/bellweaver/data:/app/data`
 2. Check that `DATABASE_PATH=/app/data/bellweaver.db` is set
 3. Verify the database file exists:
    ```bash
-   ls -la backend/data/bellweaver.db
+   ls -la packages/bellweaver/data/bellweaver.db
    ```
 
 If you synced data locally, it should be visible in Docker and vice versa.
@@ -273,7 +273,7 @@ docker-compose up -d
 The Docker setup is designed to work seamlessly with local development:
 
 **Shared Resources:**
-- **Database**: `backend/data/bellweaver.db` is mounted into the container
+- **Database**: `packages/bellweaver/data/bellweaver.db` is mounted into the container
 - **Environment**: `.env` contains credentials used by both Docker and local development
 - **State**: Changes made in Docker are visible locally and vice versa
 
