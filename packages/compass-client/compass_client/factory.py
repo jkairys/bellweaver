@@ -57,8 +57,8 @@ def create_client(
         >>> # Use mock mode with custom data directory
         >>> client = create_client(base_url, username, password, mode="mock", mock_data_dir="/path/to/data")
     """
-    effective_mode = mode or os.getenv("COMPASS_MODE", "real")
-    effective_mode = effective_mode.lower().strip()
+    effective_mode_raw = mode or os.getenv("COMPASS_MODE", "real")
+    effective_mode = str(effective_mode_raw).lower().strip()
 
     # Handle empty string as default to "real"
     if not effective_mode:
@@ -69,6 +69,4 @@ def create_client(
     elif effective_mode == "real":
         return CompassClient(base_url, username, password)
     else:
-        raise ValueError(
-            f"Invalid COMPASS_MODE: '{effective_mode}'. Must be 'real' or 'mock'."
-        )
+        raise ValueError(f"Invalid COMPASS_MODE: '{effective_mode}'. Must be 'real' or 'mock'.")

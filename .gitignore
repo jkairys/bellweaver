@@ -173,7 +173,7 @@ cython_debug/
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
+.idea/
 
 # Abstra
 # Abstra is an AI-powered process automation framework.
@@ -186,10 +186,13 @@ cython_debug/
 #  that can be found at https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore
 #  and can be added to the global gitignore or merged into this file. However, if you prefer, 
 #  you could uncomment the following to ignore the entire vscode folder
-# .vscode/
+.vscode/
 
 # Ruff stuff:
 .ruff_cache/
+
+# Swap files
+*.swp
 
 # PyPI configuration file
 .pypirc
@@ -206,10 +209,12 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-# Bellweaver project-specific
-!backend/data/.gitkeep
-backend/.venv/
-backend/poetry.lock
+# Project-specific ignores for Bellweaver monorepo
+!packages/bellweaver/data/.gitignore
+packages/bellweaver/.venv/
+packages/bellweaver/poetry.lock
+packages/compass-client/.venv/
+packages/compass-client/poetry.lock
 frontend/node_modules/
 frontend/dist/
 frontend/build/

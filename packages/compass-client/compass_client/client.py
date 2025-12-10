@@ -100,7 +100,9 @@ class CompassClient:
             response.raise_for_status()
 
             if "login.aspx" in response.url.lower():
-                raise CompassAuthenticationError("Login failed: Invalid credentials or server error")
+                raise CompassAuthenticationError(
+                    "Login failed: Invalid credentials or server error"
+                )
 
             self._extract_session_metadata(response.text)
 
@@ -124,7 +126,7 @@ class CompassClient:
             Dictionary of form field names and values (empty dict if no form found)
         """
         soup = BeautifulSoup(html_content, "html.parser")
-        form_data = {}
+        form_data: Dict[str, str] = {} # Explicitly declare type
 
         form = soup.find("form")
         if not form:
@@ -132,9 +134,10 @@ class CompassClient:
 
         for input_field in form.find_all("input"):
             name = input_field.get("name")
-            value = input_field.get("value", "")
-            if name:
-                form_data[name] = value
+            if name:  # Ensure name is not None
+                value = input_field.get("value", "")
+                if value is not None: # Ensure value is not None, though get with default should prevent
+                    form_data[name] = str(value) # Explicitly cast to str
 
         if "__EVENTTARGET" not in form_data:
             form_data["__EVENTTARGET"] = "button1"

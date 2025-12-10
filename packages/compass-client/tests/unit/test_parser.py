@@ -3,7 +3,7 @@
 from datetime import datetime
 
 import pytest
-from pydantic import ValidationError
+
 
 from compass_client import CompassParser, CompassEvent, CompassUser
 from compass_client.exceptions import CompassParseError

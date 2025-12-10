@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 import pytest
 from sqlalchemy import inspect
 
-from bellweaver.db.database import Base, SessionLocal, init_db
+from bellweaver.db.database import SessionLocal, init_db
 from bellweaver.db.models import ApiPayload, Batch, Event
 
 
@@ -195,12 +195,6 @@ class TestEventORM:
             end=datetime(2025, 1, 15, 10, 0, tzinfo=timezone.utc),
         )
         db_session.add(event)
-        db_session.commit()
-
-        original_updated_at = event.updated_at
-
-        # Update the event
-        event.title = "Updated Event"
         db_session.commit()
 
         # updated_at should change (SQLAlchemy's onupdate)

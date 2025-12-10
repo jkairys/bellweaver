@@ -62,15 +62,16 @@ class Batch(Base):
     adapter_id = Column(String(50), nullable=False, index=True)
     method_name = Column(String(100), nullable=False, index=True)
     parameters = Column(SQLiteJSON, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
+    created_at = Column(
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True
+    )
 
     # Relationship to ApiPayload records
     payloads = relationship("ApiPayload", back_populates="batch", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return (
-            f"<Batch(id='{self.id}', adapter='{self.adapter_id}', "
-            f"method='{self.method_name}')>"
+            f"<Batch(id='{self.id}', adapter='{self.adapter_id}', " f"method='{self.method_name}')>"
         )
 
 
@@ -87,16 +88,22 @@ class ApiPayload(Base):
 
     __tablename__ = "api_payloads"
     __table_args__ = (
-        UniqueConstraint('adapter_id', 'method_name', 'external_id', name='uix_api_payload_external'),
+        UniqueConstraint(
+            "adapter_id", "method_name", "external_id", name="uix_api_payload_external"
+        ),
     )
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()), nullable=False)
     adapter_id = Column(String(50), nullable=False, index=True)
     method_name = Column(String(100), nullable=False, index=True)
     batch_id = Column(String(36), ForeignKey("batches.id"), nullable=False, index=True)
-    external_id = Column(String(255), nullable=False, index=True)  # Unique identifier from source system
+    external_id = Column(
+        String(255), nullable=False, index=True
+    )  # Unique identifier from source system
     payload = Column(SQLiteJSON, nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
+    created_at = Column(
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True
+    )
     updated_at = Column(
         DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -166,14 +173,10 @@ class Event(Base):
 
     __tablename__ = "events"
 
-    id = Column(
-        String(36), primary_key=True, default=lambda: str(uuid.uuid4()), nullable=False
-    )
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()), nullable=False)
 
     # Foreign key to original API payload for lineage tracking
-    api_payload_id = Column(
-        String(36), ForeignKey("api_payloads.id"), nullable=False, index=True
-    )
+    api_payload_id = Column(String(36), ForeignKey("api_payloads.id"), nullable=False, index=True)
 
     # Core event fields
     title = Column(String(500), nullable=False)
@@ -189,9 +192,7 @@ class Event(Base):
     status = Column(String(50), nullable=True)
 
     # Metadata
-    created_at = Column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
-    )
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(
         DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -221,7 +222,9 @@ class Child(Base):
     date_of_birth = Column(Date, nullable=False)
     gender = Column(String(50), nullable=True)
     interests = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
+    created_at = Column(
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True
+    )
     updated_at = Column(
         DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -256,7 +259,9 @@ class Organisation(Base):
     type = Column(String(50), nullable=False, index=True)
     address = Column(String(500), nullable=True)
     contact_info = Column(SQLiteJSON, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
+    created_at = Column(
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True
+    )
     updated_at = Column(
         DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -293,7 +298,9 @@ class ChildOrganisation(Base):
     __tablename__ = "child_organisations"
 
     child_id = Column(String(36), ForeignKey("children.id", ondelete="CASCADE"), primary_key=True)
-    organisation_id = Column(String(36), ForeignKey("organisations.id", ondelete="CASCADE"), primary_key=True)
+    organisation_id = Column(
+        String(36), ForeignKey("organisations.id", ondelete="CASCADE"), primary_key=True
+    )
 
     def __repr__(self) -> str:
         return f"<ChildOrganisation(child_id='{self.child_id}', organisation_id='{self.organisation_id}')>"
@@ -312,7 +319,9 @@ class CommunicationChannel(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()), nullable=False)
     organisation_id = Column(String(36), ForeignKey("organisations.id"), nullable=False, index=True)
     channel_type = Column(String(50), nullable=False, index=True)
-    credential_source = Column(String(50), ForeignKey("credentials.source", ondelete="SET NULL"), nullable=True)
+    credential_source = Column(
+        String(50), ForeignKey("credentials.source", ondelete="SET NULL"), nullable=True
+    )
     config = Column(SQLiteJSON, nullable=True)
     is_active = Column(Boolean, default=True, nullable=False, index=True)
     last_sync_at = Column(DateTime, nullable=True)

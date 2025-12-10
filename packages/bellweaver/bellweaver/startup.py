@@ -6,6 +6,7 @@ the application can function properly before handling requests.
 """
 
 import os
+from pathlib import Path  # Add Path import
 from typing import Optional
 
 from compass_client.mock_validator import (
@@ -53,9 +54,13 @@ def validate_mock_data_startup() -> None:
     Raises:
         StartupValidationError: If mock data validation fails.
     """
+    # Determine mock data path relative to this file
+    # Works in both local (repo) and Docker (/app/packages/...) environments
+    # startup.py is in packages/bellweaver/bellweaver/
+    # mock data is in packages/compass-client/data/mock
+    base_dir = Path(__file__).resolve().parent.parent.parent
+    mock_data_path = base_dir / "compass-client" / "data" / "mock"
     try:
-        validate_mock_data_schema()
+        validate_mock_data_schema(mock_data_path)  # Pass the explicit path
     except MockDataValidationError as e:
-        raise StartupValidationError(
-            f"Mock data validation failed: {e}"
-        ) from e
+        raise StartupValidationError(f"Mock data validation failed: {e}") from e

@@ -47,9 +47,7 @@ def test_compass_event_model_parses_mock_data(compass_events_data):
 def test_compass_event_model_with_locations(compass_events_data):
     """Test that CompassEvent handles location data correctly."""
     # Find an event with locations
-    event_with_locations = next(
-        e for e in compass_events_data if e.get("locations") is not None
-    )
+    event_with_locations = next(e for e in compass_events_data if e.get("locations") is not None)
 
     event = CompassEvent(**event_with_locations)
 
@@ -61,9 +59,7 @@ def test_compass_event_model_with_locations(compass_events_data):
 def test_compass_event_model_with_managers(compass_events_data):
     """Test that CompassEvent handles manager data correctly."""
     # Find an event with managers
-    event_with_managers = next(
-        e for e in compass_events_data if e.get("managers") is not None
-    )
+    event_with_managers = next(e for e in compass_events_data if e.get("managers") is not None)
 
     event = CompassEvent(**event_with_managers)
 

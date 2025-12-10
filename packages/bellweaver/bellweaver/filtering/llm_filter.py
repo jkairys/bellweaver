@@ -25,9 +25,7 @@ class LLMFilter:
         self.client = anthropic.Anthropic(api_key=api_key)
 
     def filter_events(
-        self,
-        events: List[Dict[str, Any]],
-        user_config: Dict[str, Any]
+        self, events: List[Dict[str, Any]], user_config: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         Filter events based on user configuration using Claude.
@@ -47,9 +45,7 @@ class LLMFilter:
         message = self.client.messages.create(
             model="claude-opus-4-1-20250805",
             max_tokens=2048,
-            messages=[
-                {"role": "user", "content": prompt}
-            ]
+            messages=[{"role": "user", "content": prompt}],
         )
 
         # Parse response
@@ -58,7 +54,7 @@ class LLMFilter:
         # Try to parse JSON from response
         try:
             # Look for JSON block in response
-            json_match = re.search(r'```json\n(.*?)\n```', response_text, re.DOTALL)
+            json_match = re.search(r"```json\n(.*?)\n```", response_text, re.DOTALL)
             if json_match:
                 result = json.loads(json_match.group(1))
             else:
@@ -69,11 +65,7 @@ class LLMFilter:
 
         return result
 
-    def _build_prompt(
-        self,
-        events: List[Dict[str, Any]],
-        user_config: Dict[str, Any]
-    ) -> str:
+    def _build_prompt(self, events: List[Dict[str, Any]], user_config: Dict[str, Any]) -> str:
         """Build Claude prompt for filtering events."""
 
         return f"""

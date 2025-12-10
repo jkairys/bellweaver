@@ -5,7 +5,6 @@ Pytest configuration and fixtures for Bellweaver tests.
 import os
 from pathlib import Path
 
-import pytest
 from dotenv import load_dotenv
 
 # Load .env file automatically

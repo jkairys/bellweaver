@@ -49,6 +49,7 @@ def create_app() -> Flask:
 
     # Serve frontend static files in production
     if static_folder.exists():
+
         @app.route("/", defaults={"path": ""})
         @app.route("/<path:path>")
         def serve_frontend(path):
@@ -65,8 +66,6 @@ def create_app() -> Flask:
 
 
 if __name__ == "__main__":
-    import os
-
     app = create_app()
     debug = os.getenv("FLASK_DEBUG", "false").lower() == "true"
     app.run(debug=debug, host="0.0.0.0", port=5000, use_reloader=debug)

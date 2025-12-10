@@ -2,9 +2,6 @@
 CLI commands for managing the Bellweaver API server.
 """
 
-import os
-from typing import Optional
-
 import typer
 
 app = typer.Typer(help="Manage the Bellweaver API server")
