@@ -1,41 +1,56 @@
 import React, { useState, useEffect } from 'react';
+import type { Channel } from '../../types/api';
 import './ChannelConfig.css';
 
-function ChannelConfig({ channel, onSave, onCancel, onDelete, loading }) {
-  const [channelType, setChannelType] = useState('compass');
-  const [credentials, setCredentials] = useState({
+interface ChannelConfigProps {
+  channel: Channel | null;
+  onSave: (data: any) => void;
+  onCancel: () => void;
+  onDelete: ((id: string) => void) | null;
+  loading: boolean;
+}
+
+interface Credentials {
+  username: string;
+  password: string;
+  base_url: string;
+}
+
+function ChannelConfig({ channel, onSave, onCancel, onDelete, loading }: ChannelConfigProps) {
+  const [channelType, setChannelType] = useState<string>('compass');
+  const [credentials, setCredentials] = useState<Credentials>({
     username: '',
     password: '',
     base_url: 'https://school-vic.compass.education'
   });
-  const [isActive, setIsActive] = useState(true);
-  
+  const [isActive, setIsActive] = useState<boolean>(true);
+
   useEffect(() => {
     if (channel) {
-      setChannelType(channel.channel_type);
+      setChannelType(channel.type);
       setIsActive(channel.is_active);
-      if (channel.config && channel.config.base_url) {
-          setCredentials(prev => ({ ...prev, base_url: channel.config.base_url }));
+      if (channel.config && typeof channel.config === 'object' && 'base_url' in channel.config) {
+          setCredentials(prev => ({ ...prev, base_url: channel.config?.base_url as string }));
       }
     }
   }, [channel]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const data = {
+    const data: any = {
       channel_type: channelType,
       is_active: isActive,
     };
-    
+
     // Handle credentials for Compass
     if (channelType === 'compass') {
         const hasCreds = credentials.username && credentials.password;
-        
+
         if (!channel && !hasCreds) {
             alert("Username and Password are required for new channel");
             return;
         }
-        
+
         if (hasCreds) {
             data.credentials = {
                 username: credentials.username,
@@ -48,16 +63,18 @@ function ChannelConfig({ channel, onSave, onCancel, onDelete, loading }) {
             // If API supports updating config separately...
             // My API implementation: if credentials provided -> validate & update.
             // if config provided -> update config.
-            
+
             // So if user changed base_url but not password, we should send config?
             // But base_url is tied to auth usually.
-            
+
             // For now, if no creds provided during update, we assume config (base_url) update only if changed?
-            // Let's simplified: if credentials provided, we send them. 
+            // Let's simplified: if credentials provided, we send them.
             // If base_url changed but no creds, we send config?
-            
-            if (channel.config?.base_url !== credentials.base_url) {
-                data.config = { base_url: credentials.base_url };
+
+            if (channel.config && typeof channel.config === 'object' && 'base_url' in channel.config) {
+              if (channel.config.base_url !== credentials.base_url) {
+                  data.config = { base_url: credentials.base_url };
+              }
             }
         }
     }
@@ -68,11 +85,11 @@ function ChannelConfig({ channel, onSave, onCancel, onDelete, loading }) {
   return (
     <div className="channel-config">
       <h4>{channel ? 'Edit Channel' : 'Add Channel'}</h4>
-      
+
       <form onSubmit={handleSubmit}>
         <div className="form-group">
             <label>Type</label>
-            <select value={channelType} onChange={e => setChannelType(e.target.value)} disabled={loading || channel}>
+            <select value={channelType} onChange={e => setChannelType(e.target.value)} disabled={loading || !!channel}>
                 <option value="compass">Compass</option>
                 <option value="other">Other</option>
             </select>
@@ -82,9 +99,9 @@ function ChannelConfig({ channel, onSave, onCancel, onDelete, loading }) {
             <>
                 <div className="form-group">
                     <label>Base URL</label>
-                    <input 
-                        type="url" 
-                        value={credentials.base_url} 
+                    <input
+                        type="url"
+                        value={credentials.base_url}
                         onChange={e => setCredentials({...credentials, base_url: e.target.value})}
                         required
                         disabled={loading}
@@ -92,9 +109,9 @@ function ChannelConfig({ channel, onSave, onCancel, onDelete, loading }) {
                 </div>
                 <div className="form-group">
                     <label>Username {channel ? '(leave blank to keep)' : '*'}</label>
-                    <input 
-                        type="text" 
-                        value={credentials.username} 
+                    <input
+                        type="text"
+                        value={credentials.username}
                         onChange={e => setCredentials({...credentials, username: e.target.value})}
                         required={!channel}
                         disabled={loading}
@@ -102,9 +119,9 @@ function ChannelConfig({ channel, onSave, onCancel, onDelete, loading }) {
                 </div>
                 <div className="form-group">
                     <label>Password {channel ? '(leave blank to keep)' : '*'}</label>
-                    <input 
-                        type="password" 
-                        value={credentials.password} 
+                    <input
+                        type="password"
+                        value={credentials.password}
                         onChange={e => setCredentials({...credentials, password: e.target.value})}
                         required={!channel}
                         disabled={loading}
@@ -115,9 +132,9 @@ function ChannelConfig({ channel, onSave, onCancel, onDelete, loading }) {
 
         <div className="form-group checkbox">
             <label>
-                <input 
-                    type="checkbox" 
-                    checked={isActive} 
+                <input
+                    type="checkbox"
+                    checked={isActive}
                     onChange={e => setIsActive(e.target.checked)}
                     disabled={loading}
                 />

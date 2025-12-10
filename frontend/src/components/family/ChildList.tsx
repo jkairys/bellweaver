@@ -3,9 +3,17 @@
  */
 
 import React from 'react';
+import type { Child } from '../../types/api';
 import './ChildList.css';
 
-function ChildList({ children, onEdit, onDelete, loading }) {
+interface ChildListProps {
+  children: Child[];
+  onEdit: (child: Child) => void;
+  onDelete: (child: Child) => void;
+  loading: boolean;
+}
+
+function ChildList({ children, onEdit, onDelete, loading }: ChildListProps) {
   if (loading) {
     return <div className="child-list-loading">Loading children...</div>;
   }
@@ -19,7 +27,7 @@ function ChildList({ children, onEdit, onDelete, loading }) {
     );
   }
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
@@ -28,7 +36,7 @@ function ChildList({ children, onEdit, onDelete, loading }) {
     });
   };
 
-  const calculateAge = (dateOfBirth) => {
+  const calculateAge = (dateOfBirth: string): number => {
     const today = new Date();
     const birthDate = new Date(dateOfBirth);
     let age = today.getFullYear() - birthDate.getFullYear();

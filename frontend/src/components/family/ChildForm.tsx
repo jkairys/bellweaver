@@ -1,16 +1,27 @@
 import React, { useState, useEffect } from 'react';
+import type { Child, Organisation, CreateChildData } from '../../types/api';
 import './ChildForm.css';
 
-function ChildForm({ child, onSubmit, onCancel, loading, availableOrganisations, onAddOrg, onRemoveOrg }) {
-  const [formData, setFormData] = useState({
+interface ChildFormProps {
+  child: Child | null;
+  onSubmit: (data: CreateChildData) => void;
+  onCancel: () => void;
+  loading: boolean;
+  availableOrganisations: Organisation[];
+  onAddOrg?: (orgId: string) => void;
+  onRemoveOrg?: (orgId: string) => void;
+}
+
+function ChildForm({ child, onSubmit, onCancel, loading, availableOrganisations, onAddOrg, onRemoveOrg }: ChildFormProps) {
+  const [formData, setFormData] = useState<CreateChildData>({
     name: '',
     date_of_birth: '',
     gender: '',
     interests: '',
   });
 
-  const [errors, setErrors] = useState({});
-  const [selectedOrgId, setSelectedOrgId] = useState(''); // State for selected org to add
+  const [errors, setErrors] = useState<Partial<Record<keyof CreateChildData, string>>>({});
+  const [selectedOrgId, setSelectedOrgId] = useState<string>(''); // State for selected org to add
 
   // Populate form when editing
   useEffect(() => {
@@ -33,7 +44,7 @@ function ChildForm({ child, onSubmit, onCancel, loading, availableOrganisations,
     setErrors({});
   }, [child]);
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -41,16 +52,16 @@ function ChildForm({ child, onSubmit, onCancel, loading, availableOrganisations,
     }));
 
     // Clear error for this field when user starts typing
-    if (errors[name]) {
+    if (errors[name as keyof CreateChildData]) {
       setErrors((prev) => ({
         ...prev,
-        [name]: null,
+        [name]: undefined,
       }));
     }
   };
 
-  const validate = () => {
-    const newErrors = {};
+  const validate = (): boolean => {
+    const newErrors: Partial<Record<keyof CreateChildData, string>> = {};
 
     if (!formData.name.trim()) {
       newErrors.name = 'Name is required';
@@ -73,7 +84,7 @@ function ChildForm({ child, onSubmit, onCancel, loading, availableOrganisations,
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!validate()) {
@@ -81,24 +92,24 @@ function ChildForm({ child, onSubmit, onCancel, loading, availableOrganisations,
     }
 
     // Clean up data before submission
-    const submitData = {
+    const submitData: Partial<CreateChildData> = {
       name: formData.name.trim(),
       date_of_birth: formData.date_of_birth,
-      gender: formData.gender.trim() || null,
-      interests: formData.interests.trim() || null,
+      gender: formData.gender?.trim() || undefined,
+      interests: formData.interests?.trim() || undefined,
     };
 
-    // Remove null/empty values
+    // Remove undefined values
     Object.keys(submitData).forEach((key) => {
-      if (submitData[key] === null || submitData[key] === '') {
-        delete submitData[key];
+      if (submitData[key as keyof CreateChildData] === undefined || submitData[key as keyof CreateChildData] === '') {
+        delete submitData[key as keyof CreateChildData];
       }
     });
 
-    onSubmit(submitData);
+    onSubmit(submitData as CreateChildData);
   };
 
-  const handleAddOrgSubmit = (e) => {
+  const handleAddOrgSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
       e.preventDefault();
       if (selectedOrgId && onAddOrg) {
           onAddOrg(selectedOrgId);
@@ -106,8 +117,8 @@ function ChildForm({ child, onSubmit, onCancel, loading, availableOrganisations,
       }
   };
 
-  const filteredOrgs = availableOrganisations 
-      ? availableOrganisations.filter(org => 
+  const filteredOrgs = availableOrganisations
+      ? availableOrganisations.filter(org =>
           !child?.organisations?.some(childOrg => childOrg.id === org.id)
         )
       : [];
@@ -171,7 +182,7 @@ function ChildForm({ child, onSubmit, onCancel, loading, availableOrganisations,
             value={formData.interests}
             onChange={handleChange}
             placeholder="e.g., Soccer, reading, science experiments"
-            rows="4"
+            rows={4}
             disabled={loading}
           />
         </div>
@@ -189,13 +200,13 @@ function ChildForm({ child, onSubmit, onCancel, loading, availableOrganisations,
       {child && (
           <div className="child-organisations-section">
               <h3>Organisations</h3>
-              
+
               {child.organisations && child.organisations.length > 0 ? (
                   <ul className="associated-orgs">
                       {child.organisations.map(org => (
                           <li key={org.id}>
                               {org.name} ({org.type})
-                              <button type="button" onClick={() => onRemoveOrg(org.id)} disabled={loading}>Remove</button>
+                              <button type="button" onClick={() => onRemoveOrg?.(org.id)} disabled={loading}>Remove</button>
                           </li>
                       ))}
                   </ul>
@@ -204,8 +215,8 @@ function ChildForm({ child, onSubmit, onCancel, loading, availableOrganisations,
               )}
 
               <div className="add-org-control">
-                  <select 
-                      value={selectedOrgId} 
+                  <select
+                      value={selectedOrgId}
                       onChange={(e) => setSelectedOrgId(e.target.value)}
                       disabled={loading}
                   >
@@ -214,9 +225,9 @@ function ChildForm({ child, onSubmit, onCancel, loading, availableOrganisations,
                           <option key={org.id} value={org.id}>{org.name}</option>
                       ))}
                   </select>
-                  <button 
-                      type="button" 
-                      onClick={handleAddOrgSubmit} 
+                  <button
+                      type="button"
+                      onClick={handleAddOrgSubmit}
                       disabled={!selectedOrgId || loading}
                   >
                       Add

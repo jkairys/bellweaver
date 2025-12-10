@@ -1,7 +1,17 @@
 import { useMemo } from 'react';
+import type { EventsResponse, Event } from '../types/api';
 import './ThisWeekView.css';
 
-function ThisWeekView({ events }) {
+interface ThisWeekViewProps {
+  events: EventsResponse | null;
+}
+
+interface DayData {
+  date: Date;
+  events: Event[];
+}
+
+function ThisWeekView({ events }: ThisWeekViewProps) {
   // Calculate the current week boundaries (Sunday to Saturday)
   const { weekStart, weekEnd } = useMemo(() => {
     const now = new Date();
@@ -21,10 +31,10 @@ function ThisWeekView({ events }) {
   }, []);
 
   // Filter and group events by day
-  const eventsThisWeek = useMemo(() => {
+  const eventsThisWeek = useMemo<Record<string, DayData>>(() => {
     if (!events?.events) return {};
 
-    const grouped = {};
+    const grouped: Record<string, DayData> = {};
 
     events.events.forEach(event => {
       const eventDate = new Date(event.start);
@@ -50,23 +60,23 @@ function ThisWeekView({ events }) {
 
     // Sort events within each day by time
     Object.values(grouped).forEach(day => {
-      day.events.sort((a, b) => new Date(a.start) - new Date(b.start));
+      day.events.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
     });
 
     return grouped;
   }, [events, weekStart, weekEnd]);
 
   // Create array of days sorted chronologically
-  const sortedDays = useMemo(() => {
+  const sortedDays = useMemo<[string, DayData][]>(() => {
     return Object.entries(eventsThisWeek)
-      .sort(([, a], [, b]) => a.date - b.date);
+      .sort(([, a], [, b]) => a.date.getTime() - b.date.getTime());
   }, [eventsThisWeek]);
 
   // Format week range for header
   const weekRange = `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
 
   // Check if a date is today
-  const isToday = (date) => {
+  const isToday = (date: Date): boolean => {
     const today = new Date();
     return date.toDateString() === today.toDateString();
   };

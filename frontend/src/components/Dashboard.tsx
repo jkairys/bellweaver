@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
+import type { UserDetailsResponse, EventsResponse } from '../types/api';
 import { getUserDetails, getEvents } from '../services/api';
 import Calendar from './Calendar';
 import ThisWeekView from './ThisWeekView';
 import './Dashboard.css';
 
+type ViewMode = 'calendar' | 'thisWeek';
+
 function Dashboard() {
-  const [user, setUser] = useState(null);
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [viewMode, setViewMode] = useState('calendar'); // 'calendar' or 'thisWeek'
+  const [user, setUser] = useState<UserDetailsResponse | null>(null);
+  const [events, setEvents] = useState<EventsResponse | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('calendar');
 
   useEffect(() => {
     async function fetchData() {
@@ -25,7 +28,7 @@ function Dashboard() {
         setUser(userData);
         setEvents(eventsData);
       } catch (err) {
-        setError(err.message);
+        setError((err as Error).message);
       } finally {
         setLoading(false);
       }
@@ -90,7 +93,7 @@ function Dashboard() {
           <ThisWeekView events={events} />
         )}
 
-        {events?.event_count > 0 && (
+        {events && events.event_count > 0 && (
           <p className="total-count">
             Total events in database: {events.event_count}
           </p>
@@ -101,4 +104,3 @@ function Dashboard() {
 }
 
 export default Dashboard;
-

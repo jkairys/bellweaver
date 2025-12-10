@@ -1,9 +1,23 @@
 import React, { useState } from 'react';
+import type { Organisation } from '../../types/api';
 
-function OrganisationList({ organisations, onEdit, onDelete, onFilter, loading }) {
-  const [typeFilter, setTypeFilter] = useState('');
+interface OrganisationListProps {
+  organisations: Organisation[];
+  onEdit: (org: Organisation) => void;
+  onDelete: (org: Organisation) => void;
+  onFilter: (type: string) => void;
+  loading: boolean;
+}
 
-  const orgTypes = [
+interface OrgType {
+  value: string;
+  label: string;
+}
+
+function OrganisationList({ organisations, onEdit, onDelete, onFilter, loading }: OrganisationListProps) {
+  const [typeFilter, setTypeFilter] = useState<string>('');
+
+  const orgTypes: OrgType[] = [
     { value: '', label: 'All Types' },
     { value: 'school', label: 'School' },
     { value: 'daycare', label: 'Daycare' },
@@ -12,7 +26,7 @@ function OrganisationList({ organisations, onEdit, onDelete, onFilter, loading }
     { value: 'other', label: 'Other' }
   ];
 
-  const handleFilterChange = (e) => {
+  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newVal = e.target.value;
     setTypeFilter(newVal);
     onFilter(newVal);
@@ -23,10 +37,10 @@ function OrganisationList({ organisations, onEdit, onDelete, onFilter, loading }
   return (
     <div className="organisation-list">
       <h3>Organisations</h3>
-      
+
       <div className="filter-controls">
-        <select 
-          value={typeFilter} 
+        <select
+          value={typeFilter}
           onChange={handleFilterChange}
         >
           {orgTypes.map(t => (
@@ -47,10 +61,10 @@ function OrganisationList({ organisations, onEdit, onDelete, onFilter, loading }
                 {(!org.channels || !org.channels.some(c => c.is_active)) && (
                     <div style={{marginTop: '5px'}}>
                         <span style={{
-                            backgroundColor: '#fff3cd', 
-                            color: '#856404', 
-                            padding: '2px 6px', 
-                            borderRadius: '4px', 
+                            backgroundColor: '#fff3cd',
+                            color: '#856404',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
                             fontSize: '0.8rem'
                         }}>
                             Needs Setup

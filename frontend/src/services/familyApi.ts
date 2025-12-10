@@ -4,15 +4,27 @@
  * All functions handle error responses and return structured data.
  */
 
+import type {
+  Child,
+  Organisation,
+  Channel,
+  CreateChildData,
+  UpdateChildData,
+  CreateOrganisationData,
+  UpdateOrganisationData,
+  CreateChannelData,
+  UpdateChannelData,
+} from '../types/api';
+
 const API_BASE_URL = '/api';
 
 /**
  * Handle API responses and errors.
- * @param {Response} response - Fetch response object
- * @returns {Promise<any>} Parsed JSON data
- * @throws {Error} API error with message
+ * @param response - Fetch response object
+ * @returns Parsed JSON data
+ * @throws Error with API error message
  */
-async function handleResponse(response) {
+async function handleResponse<T>(response: Response): Promise<T> {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
@@ -27,10 +39,10 @@ async function handleResponse(response) {
 
 /**
  * Create a new child profile.
- * @param {Object} childData - Child data (name, date_of_birth, gender?, interests?)
- * @returns {Promise<Object>} Created child object with id
+ * @param childData - Child data (name, date_of_birth, gender?, interests?)
+ * @returns Created child object with id
  */
-export async function createChild(childData) {
+export async function createChild(childData: CreateChildData): Promise<Child> {
   const response = await fetch(`${API_BASE_URL}/children`, {
     method: 'POST',
     headers: {
@@ -39,35 +51,35 @@ export async function createChild(childData) {
     body: JSON.stringify(childData),
   });
 
-  return handleResponse(response);
+  return handleResponse<Child>(response);
 }
 
 /**
  * Get all children.
- * @returns {Promise<Array>} Array of child objects
+ * @returns Array of child objects
  */
-export async function getChildren() {
+export async function getChildren(): Promise<Child[]> {
   const response = await fetch(`${API_BASE_URL}/children`);
-  return handleResponse(response);
+  return handleResponse<Child[]>(response);
 }
 
 /**
  * Get a single child by ID.
- * @param {string} childId - Child UUID
- * @returns {Promise<Object>} Child object
+ * @param childId - Child UUID
+ * @returns Child object
  */
-export async function getChild(childId) {
+export async function getChild(childId: string): Promise<Child> {
   const response = await fetch(`${API_BASE_URL}/children/${childId}`);
-  return handleResponse(response);
+  return handleResponse<Child>(response);
 }
 
 /**
  * Update a child profile.
- * @param {string} childId - Child UUID
- * @param {Object} childData - Updated child data
- * @returns {Promise<Object>} Updated child object
+ * @param childId - Child UUID
+ * @param childData - Updated child data
+ * @returns Updated child object
  */
-export async function updateChild(childId, childData) {
+export async function updateChild(childId: string, childData: UpdateChildData): Promise<Child> {
   const response = await fetch(`${API_BASE_URL}/children/${childId}`, {
     method: 'PUT',
     headers: {
@@ -76,15 +88,15 @@ export async function updateChild(childId, childData) {
     body: JSON.stringify(childData),
   });
 
-  return handleResponse(response);
+  return handleResponse<Child>(response);
 }
 
 /**
  * Delete a child profile.
- * @param {string} childId - Child UUID
- * @returns {Promise<void>}
+ * @param childId - Child UUID
+ * @returns void
  */
-export async function deleteChild(childId) {
+export async function deleteChild(childId: string): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/children/${childId}`, {
     method: 'DELETE',
   });
@@ -103,10 +115,10 @@ export async function deleteChild(childId) {
 
 /**
  * Create a new organisation.
- * @param {Object} orgData - Organisation data
- * @returns {Promise<Object>} Created organisation
+ * @param orgData - Organisation data
+ * @returns Created organisation
  */
-export async function createOrganisation(orgData) {
+export async function createOrganisation(orgData: CreateOrganisationData): Promise<Organisation> {
   const response = await fetch(`${API_BASE_URL}/organisations`, {
     method: 'POST',
     headers: {
@@ -115,40 +127,40 @@ export async function createOrganisation(orgData) {
     body: JSON.stringify(orgData),
   });
 
-  return handleResponse(response);
+  return handleResponse<Organisation>(response);
 }
 
 /**
  * Get all organisations.
- * @param {string} [type] - Optional filter by organisation type
- * @returns {Promise<Array>} Array of organisations
+ * @param type - Optional filter by organisation type
+ * @returns Array of organisations
  */
-export async function getOrganisations(type = null) {
+export async function getOrganisations(type: string | null = null): Promise<Organisation[]> {
   const url = type
     ? `${API_BASE_URL}/organisations?type=${encodeURIComponent(type)}`
     : `${API_BASE_URL}/organisations`;
 
   const response = await fetch(url);
-  return handleResponse(response);
+  return handleResponse<Organisation[]>(response);
 }
 
 /**
  * Get a single organisation by ID.
- * @param {string} orgId - Organisation UUID
- * @returns {Promise<Object>} Organisation object
+ * @param orgId - Organisation UUID
+ * @returns Organisation object
  */
-export async function getOrganisation(orgId) {
+export async function getOrganisation(orgId: string): Promise<Organisation> {
   const response = await fetch(`${API_BASE_URL}/organisations/${orgId}`);
-  return handleResponse(response);
+  return handleResponse<Organisation>(response);
 }
 
 /**
  * Update an organisation.
- * @param {string} orgId - Organisation UUID
- * @param {Object} orgData - Updated organisation data
- * @returns {Promise<Object>} Updated organisation
+ * @param orgId - Organisation UUID
+ * @param orgData - Updated organisation data
+ * @returns Updated organisation
  */
-export async function updateOrganisation(orgId, orgData) {
+export async function updateOrganisation(orgId: string, orgData: UpdateOrganisationData): Promise<Organisation> {
   const response = await fetch(`${API_BASE_URL}/organisations/${orgId}`, {
     method: 'PUT',
     headers: {
@@ -157,15 +169,15 @@ export async function updateOrganisation(orgId, orgData) {
     body: JSON.stringify(orgData),
   });
 
-  return handleResponse(response);
+  return handleResponse<Organisation>(response);
 }
 
 /**
  * Delete an organisation.
- * @param {string} orgId - Organisation UUID
- * @returns {Promise<void>}
+ * @param orgId - Organisation UUID
+ * @returns void
  */
-export async function deleteOrganisation(orgId) {
+export async function deleteOrganisation(orgId: string): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/organisations/${orgId}`, {
     method: 'DELETE',
   });
@@ -183,21 +195,21 @@ export async function deleteOrganisation(orgId) {
 
 /**
  * Get all organisations for a child.
- * @param {string} childId - Child UUID
- * @returns {Promise<Array>} Array of organisations
+ * @param childId - Child UUID
+ * @returns Array of organisations
  */
-export async function getChildOrganisations(childId) {
+export async function getChildOrganisations(childId: string): Promise<Organisation[]> {
   const response = await fetch(`${API_BASE_URL}/children/${childId}/organisations`);
-  return handleResponse(response);
+  return handleResponse<Organisation[]>(response);
 }
 
 /**
  * Associate a child with an organisation.
- * @param {string} childId - Child UUID
- * @param {string} organisationId - Organisation UUID
- * @returns {Promise<void>}
+ * @param childId - Child UUID
+ * @param organisationId - Organisation UUID
+ * @returns void
  */
-export async function addChildOrganisation(childId, organisationId) {
+export async function addChildOrganisation(childId: string, organisationId: string): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/children/${childId}/organisations`, {
     method: 'POST',
     headers: {
@@ -206,16 +218,16 @@ export async function addChildOrganisation(childId, organisationId) {
     body: JSON.stringify({ organisation_id: organisationId }),
   });
 
-  return handleResponse(response);
+  return handleResponse<void>(response);
 }
 
 /**
  * Remove a child-organisation association.
- * @param {string} childId - Child UUID
- * @param {string} organisationId - Organisation UUID
- * @returns {Promise<void>}
+ * @param childId - Child UUID
+ * @param organisationId - Organisation UUID
+ * @returns void
  */
-export async function removeChildOrganisation(childId, organisationId) {
+export async function removeChildOrganisation(childId: string, organisationId: string): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/children/${childId}/organisations/${organisationId}`, {
     method: 'DELETE',
   });
@@ -233,21 +245,21 @@ export async function removeChildOrganisation(childId, organisationId) {
 
 /**
  * Get all channels for an organisation.
- * @param {string} orgId - Organisation UUID
- * @returns {Promise<Array>} Array of channel objects
+ * @param orgId - Organisation UUID
+ * @returns Array of channel objects
  */
-export async function getOrganisationChannels(orgId) {
+export async function getOrganisationChannels(orgId: string): Promise<Channel[]> {
   const response = await fetch(`${API_BASE_URL}/organisations/${orgId}/channels`);
-  return handleResponse(response);
+  return handleResponse<Channel[]>(response);
 }
 
 /**
  * Create a new channel for an organisation.
- * @param {string} orgId - Organisation UUID
- * @param {Object} channelData - Channel data
- * @returns {Promise<Object>} Created channel object
+ * @param orgId - Organisation UUID
+ * @param channelData - Channel data
+ * @returns Created channel object
  */
-export async function createChannel(orgId, channelData) {
+export async function createChannel(orgId: string, channelData: CreateChannelData): Promise<Channel> {
   const response = await fetch(`${API_BASE_URL}/organisations/${orgId}/channels`, {
     method: 'POST',
     headers: {
@@ -256,26 +268,26 @@ export async function createChannel(orgId, channelData) {
     body: JSON.stringify(channelData),
   });
 
-  return handleResponse(response);
+  return handleResponse<Channel>(response);
 }
 
 /**
  * Get a single channel by ID.
- * @param {string} channelId - Channel UUID
- * @returns {Promise<Object>} Channel object
+ * @param channelId - Channel UUID
+ * @returns Channel object
  */
-export async function getChannel(channelId) {
+export async function getChannel(channelId: string): Promise<Channel> {
   const response = await fetch(`${API_BASE_URL}/channels/${channelId}`);
-  return handleResponse(response);
+  return handleResponse<Channel>(response);
 }
 
 /**
  * Update a channel.
- * @param {string} channelId - Channel UUID
- * @param {Object} channelData - Updated channel data
- * @returns {Promise<Object>} Updated channel object
+ * @param channelId - Channel UUID
+ * @param channelData - Updated channel data
+ * @returns Updated channel object
  */
-export async function updateChannel(channelId, channelData) {
+export async function updateChannel(channelId: string, channelData: UpdateChannelData): Promise<Channel> {
   const response = await fetch(`${API_BASE_URL}/channels/${channelId}`, {
     method: 'PUT',
     headers: {
@@ -284,15 +296,15 @@ export async function updateChannel(channelId, channelData) {
     body: JSON.stringify(channelData),
   });
 
-  return handleResponse(response);
+  return handleResponse<Channel>(response);
 }
 
 /**
  * Delete a channel.
- * @param {string} channelId - Channel UUID
- * @returns {Promise<void>}
+ * @param channelId - Channel UUID
+ * @returns void
  */
-export async function deleteChannel(channelId) {
+export async function deleteChannel(channelId: string): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/channels/${channelId}`, {
     method: 'DELETE',
   });

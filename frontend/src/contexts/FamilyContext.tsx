@@ -1,4 +1,16 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import type {
+  Child,
+  Organisation,
+  FamilyContextValue,
+  Toast,
+  CreateChildData,
+  UpdateChildData,
+  CreateOrganisationData,
+  UpdateOrganisationData,
+  CreateChannelData,
+  UpdateChannelData,
+} from '../types/api';
 import {
   getChildren, createChild, updateChild, deleteChild,
   getOrganisations, createOrganisation, updateOrganisation, deleteOrganisation,
@@ -7,21 +19,25 @@ import {
   addChildOrganisation, removeChildOrganisation, getChild // details
 } from '../services/familyApi';
 
-const FamilyContext = createContext();
+const FamilyContext = createContext<FamilyContextValue | undefined>(undefined);
 
-export function useFamily() {
-  return useContext(FamilyContext);
+export function useFamily(): FamilyContextValue {
+  const context = useContext(FamilyContext);
+  if (!context) {
+    throw new Error('useFamily must be used within a FamilyProvider');
+  }
+  return context;
 }
 
-export function FamilyProvider({ children }) {
-  const [childrenList, setChildrenList] = useState([]);
-  const [organisationsList, setOrganisationsList] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [toast, setToast] = useState(null);
+export function FamilyProvider({ children }: { children: React.ReactNode }) {
+  const [childrenList, setChildrenList] = useState<Child[]>([]);
+  const [organisationsList, setOrganisationsList] = useState<Organisation[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<Toast | null>(null);
 
   // Toast helper
-  const showToast = useCallback((message, type = 'success') => {
+  const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 5000);
   }, []);
@@ -36,20 +52,20 @@ export function FamilyProvider({ children }) {
       const data = await getChildren();
       setChildrenList(data);
     } catch (err) {
-      setError(err.message);
+      setError((err as Error).message);
       showToast('Failed to load children', 'error');
     } finally {
       setLoading(false);
     }
   }, [showToast]);
 
-  const refreshOrganisations = useCallback(async (type = null) => {
+  const refreshOrganisations = useCallback(async (type: string | null = null) => {
     setLoading(true);
     try {
       const data = await getOrganisations(type);
       setOrganisationsList(data);
     } catch (err) {
-      setError(err.message);
+      setError((err as Error).message);
       showToast('Failed to load organisations', 'error');
     } finally {
       setLoading(false);
@@ -62,7 +78,7 @@ export function FamilyProvider({ children }) {
   }, [refreshChildren, refreshOrganisations]);
 
   // Child Operations
-  const addChild = async (data) => {
+  const addChild = async (data: CreateChildData): Promise<boolean> => {
     setLoading(true);
     try {
       await createChild(data);
@@ -70,14 +86,14 @@ export function FamilyProvider({ children }) {
       showToast('Child created successfully', 'success');
       return true;
     } catch (err) {
-      showToast(err.message, 'error');
+      showToast((err as Error).message, 'error');
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  const editChild = async (id, data) => {
+  const editChild = async (id: string, data: UpdateChildData): Promise<boolean> => {
     setLoading(true);
     try {
       await updateChild(id, data);
@@ -85,14 +101,14 @@ export function FamilyProvider({ children }) {
       showToast('Child updated successfully', 'success');
       return true;
     } catch (err) {
-      showToast(err.message, 'error');
+      showToast((err as Error).message, 'error');
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  const removeChild = async (id) => {
+  const removeChild = async (id: string): Promise<boolean> => {
     setLoading(true);
     try {
       await deleteChild(id);
@@ -100,19 +116,19 @@ export function FamilyProvider({ children }) {
       showToast('Child deleted successfully', 'success');
       return true;
     } catch (err) {
-      showToast(err.message, 'error');
+      showToast((err as Error).message, 'error');
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchChildDetails = async (id) => {
+  const fetchChildDetails = async (id: string): Promise<Child | null> => {
       setLoading(true);
       try {
           return await getChild(id);
       } catch (err) {
-          showToast(err.message, 'error');
+          showToast((err as Error).message, 'error');
           return null;
       } finally {
           setLoading(false);
@@ -120,7 +136,7 @@ export function FamilyProvider({ children }) {
   };
 
   // Organisation Operations
-  const addOrganisation = async (data) => {
+  const addOrganisation = async (data: CreateOrganisationData): Promise<boolean> => {
     setLoading(true);
     try {
       await createOrganisation(data);
@@ -128,14 +144,14 @@ export function FamilyProvider({ children }) {
       showToast('Organisation created successfully', 'success');
       return true;
     } catch (err) {
-      showToast(err.message, 'error');
+      showToast((err as Error).message, 'error');
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  const editOrganisation = async (id, data) => {
+  const editOrganisation = async (id: string, data: UpdateOrganisationData): Promise<boolean> => {
     setLoading(true);
     try {
       await updateOrganisation(id, data);
@@ -143,14 +159,14 @@ export function FamilyProvider({ children }) {
       showToast('Organisation updated successfully', 'success');
       return true;
     } catch (err) {
-      showToast(err.message, 'error');
+      showToast((err as Error).message, 'error');
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  const removeOrganisation = async (id) => {
+  const removeOrganisation = async (id: string): Promise<boolean> => {
     setLoading(true);
     try {
       await deleteOrganisation(id);
@@ -158,19 +174,19 @@ export function FamilyProvider({ children }) {
       showToast('Organisation deleted successfully', 'success');
       return true;
     } catch (err) {
-      showToast(err.message, 'error');
+      showToast((err as Error).message, 'error');
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchOrganisationDetails = async (id) => {
+  const fetchOrganisationDetails = async (id: string): Promise<Organisation | null> => {
       setLoading(true);
       try {
           return await getOrganisation(id);
       } catch (err) {
-          showToast(err.message, 'error');
+          showToast((err as Error).message, 'error');
           return null;
       } finally {
           setLoading(false);
@@ -178,28 +194,28 @@ export function FamilyProvider({ children }) {
   };
 
   // Association Operations
-  const associateChild = async (childId, orgId) => {
+  const associateChild = async (childId: string, orgId: string): Promise<boolean> => {
       setLoading(true);
       try {
           await addChildOrganisation(childId, orgId);
           showToast('Association added', 'success');
           return true;
       } catch (err) {
-          showToast(err.message, 'error');
+          showToast((err as Error).message, 'error');
           return false;
       } finally {
           setLoading(false);
       }
   };
 
-  const dissociateChild = async (childId, orgId) => {
+  const dissociateChild = async (childId: string, orgId: string): Promise<boolean> => {
       setLoading(true);
       try {
           await removeChildOrganisation(childId, orgId);
           showToast('Association removed', 'success');
           return true;
       } catch (err) {
-          showToast(err.message, 'error');
+          showToast((err as Error).message, 'error');
           return false;
       } finally {
           setLoading(false);
@@ -207,49 +223,49 @@ export function FamilyProvider({ children }) {
   };
 
   // Channel Operations
-  const addChannel = async (orgId, data) => {
+  const addChannel = async (orgId: string, data: CreateChannelData): Promise<boolean> => {
       setLoading(true);
       try {
           await createChannel(orgId, data);
           showToast('Channel added', 'success');
           return true;
       } catch (err) {
-          showToast(err.message, 'error');
+          showToast((err as Error).message, 'error');
           return false;
       } finally {
           setLoading(false);
       }
   };
 
-  const editChannel = async (id, data) => {
+  const editChannel = async (id: string, data: UpdateChannelData): Promise<boolean> => {
       setLoading(true);
       try {
           await updateChannel(id, data);
           showToast('Channel updated', 'success');
           return true;
       } catch (err) {
-          showToast(err.message, 'error');
+          showToast((err as Error).message, 'error');
           return false;
       } finally {
           setLoading(false);
       }
   };
 
-  const removeChannel = async (id) => {
+  const removeChannel = async (id: string): Promise<boolean> => {
       setLoading(true);
       try {
           await deleteChannel(id);
           showToast('Channel deleted', 'success');
           return true;
       } catch (err) {
-          showToast(err.message, 'error');
+          showToast((err as Error).message, 'error');
           return false;
       } finally {
           setLoading(false);
       }
   };
 
-  const value = {
+  const value: FamilyContextValue = {
     childrenList,
     organisationsList,
     loading,

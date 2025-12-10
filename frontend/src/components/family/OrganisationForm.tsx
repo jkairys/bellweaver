@@ -1,18 +1,42 @@
 import React, { useState, useEffect } from 'react';
+import type { Organisation } from '../../types/api';
 import ChannelConfig from './ChannelConfig';
 import './OrganisationForm.css';
 
-function OrganisationForm({ existingOrg, onSubmit, onCancel, loading, onAddChannel, onUpdateChannel, onDeleteChannel }) {
-  const [formData, setFormData] = useState({
+interface OrganisationFormProps {
+  existingOrg: any | null;
+  onSubmit: (data: any) => void;
+  onCancel: () => void;
+  loading: boolean;
+  onAddChannel?: (orgId: string, data: any) => void;
+  onUpdateChannel?: (channelId: string, data: any) => void;
+  onDeleteChannel?: (channelId: string) => void;
+}
+
+interface ContactInfo {
+  phone: string;
+  email: string;
+  website: string;
+}
+
+interface FormData {
+  name: string;
+  type: string;
+  address: string;
+  contact_info: ContactInfo;
+}
+
+function OrganisationForm({ existingOrg, onSubmit, onCancel, loading, onAddChannel, onUpdateChannel, onDeleteChannel }: OrganisationFormProps) {
+  const [formData, setFormData] = useState<FormData>({
     name: '',
     type: 'school',
     address: '',
     contact_info: { phone: '', email: '', website: '' }
   });
-  
-  const [editingChannel, setEditingChannel] = useState(null);
-  const [showChannelForm, setShowChannelForm] = useState(false);
-  
+
+  const [editingChannel, setEditingChannel] = useState<any>(null);
+  const [showChannelForm, setShowChannelForm] = useState<boolean>(false);
+
   useEffect(() => {
     if (existingOrg) {
       setFormData({
@@ -35,10 +59,10 @@ function OrganisationForm({ existingOrg, onSubmit, onCancel, loading, onAddChann
     }
   }, [existingOrg]);
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     if (name.startsWith('contact_')) {
-      const field = name.replace('contact_', '');
+      const field = name.replace('contact_', '') as keyof ContactInfo;
       setFormData(prev => ({
         ...prev,
         contact_info: { ...prev.contact_info, [field]: value }
@@ -48,7 +72,7 @@ function OrganisationForm({ existingOrg, onSubmit, onCancel, loading, onAddChann
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     onSubmit(formData);
   };
@@ -60,12 +84,12 @@ function OrganisationForm({ existingOrg, onSubmit, onCancel, loading, onAddChann
 
       <div className="form-group">
         <label>Name*</label>
-        <input 
-          type="text" 
-          name="name" 
-          value={formData.name} 
-          onChange={handleChange} 
-          required 
+        <input
+          type="text"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          required
           disabled={loading}
         />
       </div>
@@ -83,44 +107,44 @@ function OrganisationForm({ existingOrg, onSubmit, onCancel, loading, onAddChann
 
       <div className="form-group">
         <label>Address</label>
-        <input 
-          type="text" 
-          name="address" 
-          value={formData.address} 
-          onChange={handleChange} 
+        <input
+          type="text"
+          name="address"
+          value={formData.address}
+          onChange={handleChange}
           disabled={loading}
         />
       </div>
 
       <div className="form-group">
         <label>Phone</label>
-        <input 
-          type="tel" 
-          name="contact_phone" 
-          value={formData.contact_info.phone} 
-          onChange={handleChange} 
+        <input
+          type="tel"
+          name="contact_phone"
+          value={formData.contact_info.phone}
+          onChange={handleChange}
           disabled={loading}
         />
       </div>
 
       <div className="form-group">
         <label>Email</label>
-        <input 
-          type="email" 
-          name="contact_email" 
-          value={formData.contact_info.email} 
-          onChange={handleChange} 
+        <input
+          type="email"
+          name="contact_email"
+          value={formData.contact_info.email}
+          onChange={handleChange}
           disabled={loading}
         />
       </div>
 
       <div className="form-group">
         <label>Website</label>
-        <input 
-          type="url" 
-          name="contact_website" 
-          value={formData.contact_info.website} 
-          onChange={handleChange} 
+        <input
+          type="url"
+          name="contact_website"
+          value={formData.contact_info.website}
+          onChange={handleChange}
           disabled={loading}
         />
       </div>
@@ -139,7 +163,7 @@ function OrganisationForm({ existingOrg, onSubmit, onCancel, loading, onAddChann
                 <div className="associated-children">
                     <h4>Attending Children</h4>
                     <ul>
-                        {existingOrg.children.map(child => (
+                        {existingOrg.children.map((child: any) => (
                             <li key={child.id}>{child.name}</li>
                         ))}
                     </ul>
@@ -148,11 +172,11 @@ function OrganisationForm({ existingOrg, onSubmit, onCancel, loading, onAddChann
 
             <div className="channels-section">
                 <h4>Communication Channels</h4>
-                
+
                 {!showChannelForm ? (
                     <>
                         <ul className="channel-list">
-                            {existingOrg.channels && existingOrg.channels.map(ch => (
+                            {existingOrg.channels && existingOrg.channels.map((ch: any) => (
                                 <li key={ch.id} className="channel-item">
                                     <span>{ch.channel_type} ({ch.is_active ? 'Active' : 'Inactive'})</span>
                                     {ch.last_sync_status && (
@@ -173,16 +197,16 @@ function OrganisationForm({ existingOrg, onSubmit, onCancel, loading, onAddChann
                 ) : (
                     <ChannelConfig
                         channel={editingChannel}
-                        onSave={(data) => {
-                            if (editingChannel) {
+                        onSave={(data: any) => {
+                            if (editingChannel && onUpdateChannel) {
                                 onUpdateChannel(editingChannel.id, data);
-                            } else {
+                            } else if (onAddChannel) {
                                 onAddChannel(existingOrg.id, data);
                             }
                             setShowChannelForm(false);
                         }}
                         onCancel={() => setShowChannelForm(false)}
-                        onDelete={onDeleteChannel ? (id) => { onDeleteChannel(id); setShowChannelForm(false); } : null}
+                        onDelete={onDeleteChannel ? (id: string) => { onDeleteChannel(id); setShowChannelForm(false); } : null}
                         loading={loading}
                     />
                 )}

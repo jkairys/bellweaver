@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import type { Child, Organisation } from '../types/api';
 import ChildList from '../components/family/ChildList';
 import ChildForm from '../components/family/ChildForm';
 import OrganisationList from '../components/family/OrganisationList';
 import OrganisationForm from '../components/family/OrganisationForm';
 import { useFamily } from '../contexts/FamilyContext'; // Import useFamily hook
 import './FamilyManagement.css';
+
+type TabType = 'children' | 'organisations';
 
 function FamilyManagement() {
   const {
@@ -15,7 +18,6 @@ function FamilyManagement() {
     toast,
     clearError,
     clearToast,
-    refreshChildren,
     refreshOrganisations,
     addChild,
     editChild,
@@ -33,16 +35,15 @@ function FamilyManagement() {
   } = useFamily(); // Use the FamilyContext
 
   // Tab State
-  const [activeTab, setActiveTab] = useState('children'); // 'children' | 'organisations'
+  const [activeTab, setActiveTab] = useState<TabType>('children');
 
   // Child Form State
-  const [showChildForm, setShowChildForm] = useState(false);
-  const [editingChild, setEditingChild] = useState(null);
+  const [showChildForm, setShowChildForm] = useState<boolean>(false);
+  const [editingChild, setEditingChild] = useState<Child | null>(null);
 
   // Organisation Form/Filter State
-  const [showOrgForm, setShowOrgForm] = useState(false);
-  const [editingOrg, setEditingOrg] = useState(null);
-  const [orgTypeFilter, setOrgTypeFilter] = useState('');
+  const [showOrgForm, setShowOrgForm] = useState<boolean>(false);
+  const [editingOrg, setEditingOrg] = useState<any>(null);
 
   // Child Handlers (now using context functions)
   const handleAddChild = () => {
@@ -50,7 +51,7 @@ function FamilyManagement() {
     setShowChildForm(true);
   };
 
-  const handleEditChild = async (child) => {
+  const handleEditChild = async (child: Child) => {
     const fullChild = await fetchChildDetails(child.id);
     if (fullChild) {
       setEditingChild(fullChild);
@@ -58,7 +59,7 @@ function FamilyManagement() {
     }
   };
 
-  const handleDeleteChild = async (child) => {
+  const handleDeleteChild = async (child: Child) => {
     if (!window.confirm(`Are you sure you want to delete ${child.name}? This action cannot be undone.`)) return;
     const success = await removeChild(child.id);
     if (success) {
@@ -66,7 +67,7 @@ function FamilyManagement() {
     }
   };
 
-  const handleSubmitChild = async (childData) => {
+  const handleSubmitChild = async (childData: any) => {
     let success;
     if (editingChild) {
       success = await editChild(editingChild.id, childData);
@@ -90,7 +91,7 @@ function FamilyManagement() {
     setShowOrgForm(true);
   };
 
-  const handleEditOrg = async (org) => {
+  const handleEditOrg = async (org: Organisation) => {
     const fullOrg = await fetchOrganisationDetails(org.id);
     if (fullOrg) {
       setEditingOrg(fullOrg);
@@ -98,7 +99,7 @@ function FamilyManagement() {
     }
   };
 
-  const handleDeleteOrg = async (org) => {
+  const handleDeleteOrg = async (org: Organisation) => {
     if (!window.confirm(`Are you sure you want to delete ${org.name}?`)) return;
     const success = await removeOrganisation(org.id);
     if (success) {
@@ -106,7 +107,7 @@ function FamilyManagement() {
     }
   };
 
-  const handleSubmitOrg = async (orgData) => {
+  const handleSubmitOrg = async (orgData: any) => {
     let success;
     if (editingOrg) {
       success = await editOrganisation(editingOrg.id, orgData);
@@ -123,14 +124,14 @@ function FamilyManagement() {
     setShowOrgForm(false);
     setEditingOrg(null);
   };
-  
-  const handleOrgFilter = (type) => {
+
+  const handleOrgFilter = (type: string) => {
       // Context's refreshOrganisations handles filtering
       refreshOrganisations(type || null);
   };
 
   // Channel Handlers (passed to OrganisationForm, which passes to ChannelConfig)
-  const handleAddChannel = async (orgId, channelData) => {
+  const handleAddChannel = async (orgId: string, channelData: any) => {
       const success = await addChannel(orgId, channelData);
       if (success) {
           // Refresh the currently editing org to show new channel
@@ -140,7 +141,7 @@ function FamilyManagement() {
       return success; // Return success status to ChannelConfig
   };
 
-  const handleUpdateChannel = async (channelId, channelData) => {
+  const handleUpdateChannel = async (channelId: string, channelData: any) => {
       const success = await editChannel(channelId, channelData);
       if (success) {
           // Refresh the currently editing org to show updated channel
@@ -152,7 +153,7 @@ function FamilyManagement() {
       return success; // Return success status to ChannelConfig
   };
 
-  const handleDeleteChannel = async (channelId) => {
+  const handleDeleteChannel = async (channelId: string) => {
       const success = await removeChannel(channelId);
       if (success) {
           // Refresh the currently editing org to reflect channel removal
@@ -188,13 +189,13 @@ function FamilyManagement() {
 
       {/* Tabs */}
       <div className="tabs">
-        <button 
+        <button
           className={`tab-btn ${activeTab === 'children' ? 'active' : ''}`}
           onClick={() => setActiveTab('children')}
         >
           Children
         </button>
-        <button 
+        <button
           className={`tab-btn ${activeTab === 'organisations' ? 'active' : ''}`}
           onClick={() => setActiveTab('organisations')}
         >
@@ -222,7 +223,7 @@ function FamilyManagement() {
               loading={loading}
               availableOrganisations={organisationsList} // Pass available organisations
               onAddOrg={
-                  async (orgId) => { // T068, T070
+                  async (orgId: string) => { // T068, T070
                       if (editingChild) {
                           const success = await associateChild(editingChild.id, orgId);
                           if (success) {
@@ -233,7 +234,7 @@ function FamilyManagement() {
                   }
               }
               onRemoveOrg={
-                  async (orgId) => { // T068, T070
+                  async (orgId: string) => { // T068, T070
                       if (editingChild) {
                           const success = await dissociateChild(editingChild.id, orgId);
                           if (success) {

@@ -1,8 +1,13 @@
 import { useState, useMemo } from 'react';
+import type { EventsResponse, Event } from '../types/api';
 import './Calendar.css';
 
-function Calendar({ events }) {
-  const [currentDate, setCurrentDate] = useState(new Date());
+interface CalendarProps {
+  events: EventsResponse | null;
+}
+
+function Calendar({ events }: CalendarProps) {
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
 
   // Get the first day of the current month
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -17,7 +22,7 @@ function Calendar({ events }) {
 
   // Generate calendar days array
   const calendarDays = useMemo(() => {
-    const days = [];
+    const days: (number | null)[] = [];
 
     // Add empty cells for days before the first day of the month
     for (let i = 0; i < firstDayOfWeek; i++) {
@@ -33,8 +38,8 @@ function Calendar({ events }) {
   }, [firstDayOfWeek, daysInMonth]);
 
   // Map events to dates
-  const eventsByDate = useMemo(() => {
-    const map = {};
+  const eventsByDate = useMemo<Record<string, Event[]>>(() => {
+    const map: Record<string, Event[]> = {};
 
     if (!events?.events) return map;
 
@@ -75,7 +80,7 @@ function Calendar({ events }) {
   });
 
   // Check if a date is today
-  const isToday = (day) => {
+  const isToday = (day: number): boolean => {
     const today = new Date();
     return day === today.getDate() &&
            currentDate.getMonth() === today.getMonth() &&
@@ -83,7 +88,7 @@ function Calendar({ events }) {
   };
 
   // Get events for a specific day
-  const getEventsForDay = (day) => {
+  const getEventsForDay = (day: number): Event[] => {
     const dateKey = `${currentDate.getFullYear()}-${currentDate.getMonth()}-${day}`;
     return eventsByDate[dateKey] || [];
   };
