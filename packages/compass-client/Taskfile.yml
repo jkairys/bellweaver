@@ -1,0 +1,54 @@
+version: '3'
+
+tasks:
+  install:
+    desc: Install compass-client dependencies with Poetry
+    cmds:
+      - poetry install --with dev
+
+  test:
+    desc: Run all tests with coverage (excluding integration tests)
+    cmds:
+      - poetry run pytest --cov=compass_client --cov-report=term-missing -m "not integration"
+
+  test:unit:
+    desc: Run unit tests only (excluding integration tests)
+    cmds:
+      - poetry run pytest tests/ -v -m "not integration"
+
+  test:integration:
+    desc: Run integration tests (requires real API access)
+    cmds:
+      - poetry run pytest tests/ -v -m "integration"
+
+  lint:
+    desc: Run all linters (ruff, flake8, mypy)
+    cmds:
+      - poetry run ruff check .
+      - poetry run flake8 compass_client tests
+      - poetry run mypy compass_client
+
+  format:
+    desc: Run formatters with auto-fix (ruff, black)
+    cmds:
+      - poetry run ruff check --fix .
+      - poetry run black compass_client tests
+
+  refresh-mock:
+    desc: Refresh mock data from real Compass API
+    cmds:
+      - poetry run python -m compass_client.cli refresh-mock-data
+
+  validate-mock:
+    desc: Validate mock data structure
+    cmds:
+      - poetry run python -m compass_client.cli mock validate
+
+  clean:
+    desc: Clean build artifacts and caches
+    cmds:
+      - rm -rf .pytest_cache
+      - rm -rf .mypy_cache
+      - rm -rf .ruff_cache
+      - find . -type d -name "__pycache__" -exec rm -rf {} +
+      - find . -type d -name "*.egg-info" -exec rm -rf {} +

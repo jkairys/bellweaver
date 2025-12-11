@@ -15,11 +15,9 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
-from dotenv import load_dotenv
-
-from compass_client import CompassClient, CompassParser, CompassEvent, CompassUser
+from compass_client import CompassClient, CompassEvent, CompassParser, CompassUser
 from compass_client.exceptions import CompassAuthenticationError, CompassClientError
-
+from dotenv import load_dotenv
 
 # Load .env file from project root
 env_path = Path(__file__).parent.parent.parent.parent.parent / ".env"
@@ -103,7 +101,10 @@ class TestCompassClientAuthentication:
         with pytest.raises(CompassAuthenticationError) as exc_info:
             client.login()
 
-        assert ("login failed" in str(exc_info.value).lower() or "incorrect" in str(exc_info.value).lower())
+        assert (
+            "login failed" in str(exc_info.value).lower()
+            or "incorrect" in str(exc_info.value).lower()
+        )
 
 
 @pytest.mark.integration

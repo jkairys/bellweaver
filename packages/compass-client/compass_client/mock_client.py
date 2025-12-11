@@ -64,7 +64,7 @@ class CompassMockClient:
             try:
                 with open(mock_file, "r") as f:
                     events = json.load(f)
-                return events
+                return cast(list[dict[str, Any]], events)
             except (json.JSONDecodeError, IOError) as e:
                 print(f"Warning: Failed to load mock data from {mock_file}: {e}")
                 if self.mock_data_dir:
@@ -96,7 +96,7 @@ class CompassMockClient:
             try:
                 with open(mock_file, "r") as f:
                     user = json.load(f)
-                return user
+                return cast(dict[str, Any], user)
             except (json.JSONDecodeError, IOError) as e:
                 print(f"Warning: Failed to load mock data from {mock_file}: {e}")
                 if self.mock_data_dir:
