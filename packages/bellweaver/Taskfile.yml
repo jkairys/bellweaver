@@ -34,6 +34,11 @@ tasks:
     cmds:
       - poetry run bellweaver api serve
 
+  bootstrap:
+    desc: Bootstrap database with sample data for development
+    cmds:
+      - COMPASS_MODE=mock poetry run bellweaver bootstrap run
+
   clean:
     desc: Clean build artifacts and caches
     cmds:

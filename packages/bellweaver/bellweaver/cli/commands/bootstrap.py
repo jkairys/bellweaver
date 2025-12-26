@@ -57,7 +57,8 @@ def run_bootstrap(with_compass: bool = True):
             typer.echo("\n--- Running Compass Sync ---")
             try:
                 # We catch SystemExit because Typer commands might use it
-                sync_calendar_events(days=30, limit=100, incremental=False)
+                # Use full calendar year to include all mock data events
+                sync_calendar_events(days=None, limit=100, incremental=False)
                 typer.echo("\n--- Processing Compass Events ---")
                 process_events()
             except typer.Exit as e:
