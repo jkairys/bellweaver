@@ -16,7 +16,19 @@ tasks:
       - task: backend:install
 
   dev:
-    desc: Start both frontend and backend development servers
+    desc: Bootstrap sample data and start frontend/backend dev servers
+    cmds:
+      - task: dev:init
+      - task: dev:servers
+
+  dev:init:
+    desc: Initialize database with sample data for development
+    dir: ./packages/bellweaver
+    cmds:
+      - COMPASS_MODE=mock poetry run bellweaver bootstrap run
+
+  dev:servers:
+    desc: Start both frontend and backend development servers (no init)
     deps:
       - frontend:dev
       - backend:serve
