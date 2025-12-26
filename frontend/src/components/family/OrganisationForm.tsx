@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import type { Organisation } from '../../types/api';
+import { useState, useEffect } from 'react';
+import type React from 'react';
 import ChannelConfig from './ChannelConfig';
 import './OrganisationForm.css';
 

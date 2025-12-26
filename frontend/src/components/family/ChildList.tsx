@@ -2,7 +2,6 @@
  * ChildList component - Displays all children with edit/delete buttons.
  */
 
-import React from 'react';
 import type { Child } from '../../types/api';
 import './ChildList.css';
 
