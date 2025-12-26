@@ -5,7 +5,7 @@ import type { Child, Organisation } from '../types/api';
 
 // Mock fetch globally
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
+globalThis.fetch = mockFetch;
 
 // Sample data for tests
 const mockChildren: Child[] = [
@@ -81,7 +81,7 @@ describe('FamilyContext', () => {
       expect(result.current.childrenList).toHaveLength(1);
     });
 
-    expect(result.current.childrenList[0].name).toBe('Test Child');
+    expect(result.current.childrenList[0]?.name).toBe('Test Child');
   });
 
   it('should handle API errors gracefully', async () => {
