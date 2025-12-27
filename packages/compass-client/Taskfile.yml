@@ -37,7 +37,7 @@ tasks:
   refresh-mock:
     desc: Refresh mock data from real Compass API
     cmds:
-      - poetry run python -m compass_client.cli refresh-mock-data
+      - poetry run python -m compass_client.cli
 
   validate-mock:
     desc: Validate mock data structure
