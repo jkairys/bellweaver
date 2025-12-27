@@ -221,6 +221,7 @@ class Child(Base):
     name = Column(String(200), nullable=False)
     date_of_birth = Column(Date, nullable=False)
     gender = Column(String(50), nullable=True)
+    year_level = Column(String(50), nullable=True)
     interests = Column(Text, nullable=True)
     created_at = Column(
         DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True
@@ -240,7 +241,7 @@ class Child(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<Child(id='{self.id}', name='{self.name}', dob='{self.date_of_birth}')>"
+        return f"<Child(id='{self.id}', name='{self.name}', dob='{self.date_of_birth}', year_level='{self.year_level}')>"
 
 
 class Organisation(Base):
