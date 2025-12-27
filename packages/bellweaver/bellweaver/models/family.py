@@ -46,6 +46,7 @@ class ChildBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
     date_of_birth: date
     gender: Optional[str] = Field(None, max_length=50)
+    year_level: Optional[str] = Field(None, max_length=50)
     interests: Optional[str] = None
 
     @field_validator("date_of_birth")
