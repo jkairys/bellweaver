@@ -3,9 +3,10 @@ import type { UserDetailsResponse, EventsResponse } from '../types/api';
 import { getUserDetails, getEvents } from '../services/api';
 import Calendar from './Calendar';
 import ThisWeekView from './ThisWeekView';
+import WeeklySummaryView from './WeeklySummaryView';
 import './Dashboard.css';
 
-type ViewMode = 'calendar' | 'thisWeek';
+type ViewMode = 'calendar' | 'thisWeek' | 'weeklySummary';
 
 function Dashboard() {
   const [user, setUser] = useState<UserDetailsResponse | null>(null);
@@ -77,21 +78,25 @@ function Dashboard() {
             className={`view-button ${viewMode === 'calendar' ? 'active' : ''}`}
             onClick={() => setViewMode('calendar')}
           >
-            📅 Calendar
+            Calendar
           </button>
           <button
             className={`view-button ${viewMode === 'thisWeek' ? 'active' : ''}`}
             onClick={() => setViewMode('thisWeek')}
           >
-            📋 This Week
+            This Week
+          </button>
+          <button
+            className={`view-button ${viewMode === 'weeklySummary' ? 'active' : ''}`}
+            onClick={() => setViewMode('weeklySummary')}
+          >
+            Weekly Summary
           </button>
         </div>
 
-        {viewMode === 'calendar' ? (
-          <Calendar events={events} />
-        ) : (
-          <ThisWeekView events={events} />
-        )}
+        {viewMode === 'calendar' && <Calendar events={events} />}
+        {viewMode === 'thisWeek' && <ThisWeekView events={events} />}
+        {viewMode === 'weeklySummary' && <WeeklySummaryView />}
 
         {events && events.event_count > 0 && (
           <p className="total-count">

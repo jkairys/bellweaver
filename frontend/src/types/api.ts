@@ -99,6 +99,45 @@ export interface CreateChannelData {
 
 export interface UpdateChannelData extends Partial<CreateChannelData> {}
 
+// ==================== WEEKLY SUMMARY TYPES ====================
+export interface RelevantEvent {
+  id: string;
+  title: string;
+  start: string;
+  end?: string;
+  relevance_reason: string;
+  child_name: string;
+  location?: string;
+  all_day?: boolean;
+}
+
+export interface RecurringEventGroup {
+  pattern: string;
+  event_ids: string[];
+  count: number;
+}
+
+export interface EventHighlight {
+  id: string;
+  title: string;
+  why_notable: string;
+  action_needed?: string;
+}
+
+export interface WeeklySummaryResponse {
+  week_start: string;
+  week_end: string;
+  relevant_events: RelevantEvent[];
+  recurring_events: RecurringEventGroup[];
+  highlights: EventHighlight[];
+  summary: string;
+  children_included: string[];
+}
+
+export interface WeeklySummaryRequest {
+  week_start: string; // YYYY-MM-DD format, must be a Monday
+}
+
 // ==================== CONTEXT TYPES ====================
 export interface Toast {
   message: string;
