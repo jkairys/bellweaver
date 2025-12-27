@@ -52,6 +52,9 @@ events_bp = Blueprint("events", __name__, url_prefix="/api/events")
 # Create blueprint for family management routes
 family_bp = Blueprint("family", __name__, url_prefix="/api")
 
+# Create blueprint for summary routes
+summary_bp = Blueprint("summary", __name__, url_prefix="/api/summary")
+
 
 @family_bp.before_request
 def log_request_info():
@@ -1094,6 +1097,146 @@ def delete_channel(channel_id: str):
         db.close()
 
 
+# ==================== WEEKLY SUMMARY ENDPOINTS ====================
+
+
+@summary_bp.route("/weekly", methods=["POST"])
+def get_weekly_summary():
+    """
+    Generate a weekly summary of events filtered by child relevance.
+
+    Request body should match WeeklySummaryRequest schema:
+        {
+            "week_start": "2025-12-22"  // Must be a Monday
+        }
+
+    Returns:
+        200: Weekly summary with relevant events, highlights, and summary text
+        400: Invalid week_start (not a Monday or validation error)
+        500: OpenAI API error or internal error
+    """
+    from flask import request
+    import os
+    from datetime import timedelta
+
+    from bellweaver.models.weekly_summary import WeeklySummaryRequest
+    from bellweaver.filtering import OpenAISummarizer
+
+    db: Session = next(get_db())
+    try:
+        # Validate request
+        data = request.get_json()
+        if not data:
+            raise ValidationError("Request body is required", "MISSING_BODY")
+
+        try:
+            req = WeeklySummaryRequest(**data)
+        except Exception as e:
+            raise ValidationError(str(e), "VALIDATION_ERROR")
+
+        # Calculate week boundaries
+        week_start = req.week_start
+        week_end = week_start + timedelta(days=6)  # Sunday
+
+        # Get events for the week
+        week_start_dt = datetime.combine(week_start, datetime.min.time())
+        week_end_dt = datetime.combine(week_end, datetime.max.time())
+
+        stmt = (
+            select(Event)
+            .where(Event.start >= week_start_dt)
+            .where(Event.start <= week_end_dt)
+            .order_by(Event.start.asc())
+        )
+        events = db.execute(stmt).scalars().all()
+
+        # Convert events to dict format
+        event_list = []
+        for event in events:
+            event_list.append(
+                {
+                    "id": event.id,
+                    "title": event.title,
+                    "start": event.start.isoformat(),
+                    "end": event.end.isoformat() if event.end else None,
+                    "description": event.description,
+                    "location": event.location,
+                    "all_day": event.all_day,
+                }
+            )
+
+        # Get all children with their organisations
+        stmt = select(DBChild).order_by(DBChild.name.asc())
+        children = db.execute(stmt).scalars().all()
+
+        children_list = []
+        for child in children:
+            children_list.append(
+                {
+                    "name": child.name,
+                    "year_level": child.year_level,
+                    "interests": child.interests,
+                    "organisations": [
+                        {"name": org.name, "type": org.type} for org in child.organisations
+                    ],
+                }
+            )
+
+        if not children_list:
+            # No children configured, return all events without filtering
+            return (
+                jsonify(
+                    {
+                        "week_start": week_start.isoformat(),
+                        "week_end": week_end.isoformat(),
+                        "relevant_events": event_list,
+                        "recurring_events": [],
+                        "highlights": [],
+                        "summary": "No children configured. Showing all events for the week.",
+                        "children_included": [],
+                    }
+                ),
+                200,
+            )
+
+        # Get OpenAI API key
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValidationError(
+                "OPENAI_API_KEY environment variable not set", "MISSING_API_KEY"
+            )
+
+        # Call OpenAI for filtering and summarization
+        summarizer = OpenAISummarizer(api_key=api_key)
+        result = summarizer.filter_and_summarize(
+            events=event_list,
+            children=children_list,
+            week_start=week_start.isoformat(),
+            week_end=week_end.isoformat(),
+        )
+
+        # Build response
+        response = {
+            "week_start": week_start.isoformat(),
+            "week_end": week_end.isoformat(),
+            "relevant_events": result.get("relevant_events", []),
+            "recurring_events": result.get("recurring_events", []),
+            "highlights": result.get("highlights", []),
+            "summary": result.get("summary", ""),
+            "children_included": [c["name"] for c in children_list],
+        }
+
+        return jsonify(response), 200
+
+    except ValidationError:
+        raise
+    except Exception as e:
+        logger.error(f"Weekly summary error: {str(e)}")
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+    finally:
+        db.close()
+
+
 # ==================== ERROR HANDLERS ====================
 
 
@@ -1127,6 +1270,12 @@ def handle_conflict_error(error: ConflictError):
     return jsonify({"error": "Conflict", "message": error.message, "code": error.code}), 409
 
 
+@summary_bp.errorhandler(ValidationError)
+def handle_summary_validation_error(error: ValidationError):
+    """Handle validation errors for summary blueprint."""
+    return jsonify({"error": "Validation Error", "message": error.message, "code": error.code}), 400
+
+
 def register_routes(app: Flask) -> None:
     """
     Register all route blueprints with the Flask application.
@@ -1137,6 +1286,7 @@ def register_routes(app: Flask) -> None:
     app.register_blueprint(user_bp)
     app.register_blueprint(events_bp)
     app.register_blueprint(family_bp)
+    app.register_blueprint(summary_bp)
 
 
 def _organisation_needs_setup(org: DBOrganisation) -> bool:
