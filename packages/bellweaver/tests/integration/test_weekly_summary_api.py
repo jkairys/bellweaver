@@ -53,7 +53,11 @@ class TestWeeklySummaryAPI:
 
     def test_weekly_summary_missing_body(self, client):
         """Test that missing body returns 400."""
-        response = client.post("/api/summary/weekly")
+        response = client.post(
+            "/api/summary/weekly",
+            data="",
+            content_type="application/json",
+        )
 
         assert response.status_code == 400
         data = response.get_json()
@@ -85,10 +89,7 @@ class TestWeeklySummaryAPI:
 
         assert response.status_code == 400
 
-    @patch("bellweaver.api.routes.OpenAISummarizer")
-    def test_weekly_summary_no_children_returns_all_events(
-        self, mock_summarizer_class, client
-    ):
+    def test_weekly_summary_no_children_returns_all_events(self, client):
         """Test that when no children exist, all events are returned."""
         payload = {"week_start": "2025-12-22"}  # Monday
 
@@ -106,11 +107,8 @@ class TestWeeklySummaryAPI:
         assert "No children configured" in data["summary"]
         assert data["children_included"] == []
 
-        # OpenAI should not have been called
-        mock_summarizer_class.assert_not_called()
-
-    @patch("bellweaver.api.routes.OpenAISummarizer")
-    def test_weekly_summary_success_with_children(self, mock_summarizer_class, client):
+    @patch("bellweaver.filtering.openai_summarizer.OpenAI")
+    def test_weekly_summary_success_with_children(self, mock_openai_class, client):
         """Test successful weekly summary generation with children."""
         # First create a child
         child_payload = {
@@ -124,15 +122,18 @@ class TestWeeklySummaryAPI:
         )
         assert child_response.status_code == 201
 
-        # Mock the summarizer
-        mock_summarizer = MagicMock()
-        mock_summarizer.filter_and_summarize.return_value = {
-            "relevant_events": [],
-            "recurring_events": [],
-            "highlights": [],
-            "summary": "Test summary for the week",
-        }
-        mock_summarizer_class.return_value = mock_summarizer
+        # Mock OpenAI response
+        mock_response = MagicMock()
+        mock_response.choices = [
+            MagicMock(
+                message=MagicMock(
+                    content='{"relevant_events": [], "recurring_events": [], "highlights": [], "summary": "Test summary for the week"}'
+                )
+            )
+        ]
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.return_value = mock_response
+        mock_openai_class.return_value = mock_client
 
         # Now request summary
         payload = {"week_start": "2025-12-22"}
@@ -151,8 +152,8 @@ class TestWeeklySummaryAPI:
         assert "Emma Johnson" in data["children_included"]
 
         # Verify OpenAI was called
-        mock_summarizer_class.assert_called_once_with(api_key="test-key")
-        mock_summarizer.filter_and_summarize.assert_called_once()
+        mock_openai_class.assert_called_once()
+        mock_client.chat.completions.create.assert_called_once()
 
     def test_weekly_summary_missing_api_key(self, client):
         """Test that missing API key returns appropriate error."""

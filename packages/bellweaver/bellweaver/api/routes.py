@@ -1124,8 +1124,8 @@ def get_weekly_summary():
 
     db: Session = next(get_db())
     try:
-        # Validate request
-        data = request.get_json()
+        # Validate request - use silent=True to avoid 400 on malformed JSON
+        data = request.get_json(silent=True)
         if not data:
             raise ValidationError("Request body is required", "MISSING_BODY")
 
